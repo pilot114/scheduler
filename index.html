@@ -48,16 +48,13 @@
             <h3 id="modalTitle">Новое дело</h3>
             <form id="taskForm">
                 <div class="form-group">
-                    <label>Тип дела</label>
-                    <select id="taskType" onchange="toggleRecurringOptions()">
-                        <option value="single">Разовое</option>
-                        <option value="recurring">Периодическое</option>
-                    </select>
+                    <label>Заголовок*</label>
+                    <input type="text" id="taskTitle" required>
                 </div>
 
                 <div class="form-group">
-                    <label>Заголовок*</label>
-                    <input type="text" id="taskTitle" required>
+                    <label>Описание</label>
+                    <textarea id="taskDescription"></textarea>
                 </div>
 
                 <div class="form-group">
@@ -66,13 +63,15 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="taskDuration">Длительность: <span id="durationLabel">0 мин</span></label>
-                    <input type="range" id="taskDuration" min="0" max="480" step="10" value="0" style="width: 100%;">
+                    <label for="taskDuration">Длительность: <span id="durationLabel">30 мин</span></label>
+                    <input type="range" id="taskDuration" min="10" max="480" step="10" value="30" style="width: 100%;">
                 </div>
 
                 <div class="form-group">
-                    <label>Описание</label>
-                    <textarea id="taskDescription"></textarea>
+                    <label>
+                        <input type="checkbox" id="taskRecurring" onchange="toggleRecurringOptions()">
+                        Периодическое
+                    </label>
                 </div>
 
                 <div class="form-group" id="singleDateGroup">
@@ -282,6 +281,15 @@
             return `(${result.trim()})`;
         }
 
+        function formatDurationLabel(minutes) {
+            const h = Math.floor(minutes / 60);
+            const m = minutes % 60;
+            let result = '';
+            if (h > 0) result += `${h} ч `;
+            if (m > 0) result += `${m} мин`;
+            return result.trim() || '0 мин';
+        }
+
         function displayTasksForDay(date) {
             const tasksForDay = getTasksForDate(date, true); // Включаем скрытые задачи
             const taskList = document.getElementById('taskList');
@@ -343,6 +351,7 @@
             document.getElementById('modalTitle').textContent = 'Новое дело';
             document.getElementById('taskForm').reset();
             document.getElementById('taskDate').value = selectedDate;
+            document.getElementById('taskRecurring').checked = false; // Сброс чекбокса
             document.getElementById('taskModal').style.display = 'flex';
             toggleRecurringOptions();
         }
@@ -357,9 +366,10 @@
             document.getElementById('taskType').value = task.type;
             document.getElementById('taskTitle').value = task.title;
             document.getElementById('taskTime').value = task.time;
-            document.getElementById('taskDuration').value = task.duration || 0;
-            document.getElementById('durationLabel').textContent = `${task.duration || 0} мин`;
+            document.getElementById('taskDuration').value = task.duration || 30;
+            document.getElementById('durationLabel').textContent = formatDurationLabel(task.duration || 30);
             document.getElementById('taskDescription').value = task.description || '';
+            document.getElementById('taskRecurring').checked = (task.type === 'recurring');
             
             if (task.type === 'single') {
                 document.getElementById('taskDate').value = task.date;
@@ -395,16 +405,21 @@
         }
 
         function toggleRecurringOptions() {
-            const taskType = document.getElementById('taskType').value;
+            const isRecurring = document.getElementById('taskRecurring').checked;
             const recurringOptions = document.getElementById('recurringOptions');
             const singleDateGroup = document.getElementById('singleDateGroup');
             
-            if (taskType === 'recurring') {
+            if (isRecurring) {
                 recurringOptions.style.display = 'block';
                 singleDateGroup.style.display = 'none';
             } else {
                 recurringOptions.style.display = 'none';
-                singleDateGroup.style.display = 'block';
+                // Показывать поле даты только при редактировании существующей задачи
+                if (editingTaskId) {
+                    singleDateGroup.style.display = 'block';
+                } else {
+                    singleDateGroup.style.display = 'none';
+                }
             }
         }
 
@@ -427,7 +442,7 @@
         document.getElementById('taskForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
-            const taskType = document.getElementById('taskType').value;
+            const isRecurring = document.getElementById('taskRecurring').checked;
             const title = document.getElementById('taskTitle').value;
             const time = document.getElementById('taskTime').value;
             const duration = document.getElementById('taskDuration').value;
@@ -440,7 +455,7 @@
             
             const taskData = {
                 id: editingTaskId || Date.now().toString(),
-                type: taskType,
+                type: isRecurring ? 'recurring' : 'single',
                 title: title,
                 time: time,
                 duration: duration,
@@ -486,7 +501,7 @@
         });
 
         document.getElementById('taskDuration').addEventListener('input', function(e) {
-            document.getElementById('durationLabel').textContent = `${e.target.value} мин`;
+            document.getElementById('durationLabel').textContent = formatDurationLabel(e.target.value);
         });
 
         // Инициализация
