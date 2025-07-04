@@ -1,0 +1,305 @@
+* {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 20px;
+        }
+
+        .calendar-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .month-selector {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .month-selector button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .month-selector button:hover {
+            background: #2980b9;
+        }
+
+        .calendar {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        .calendar th {
+            background: #34495e;
+            color: white;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .calendar td {
+            border: 1px solid #ecf0f1;
+            padding: 5px;
+            height: 100px;
+            vertical-align: top;
+            position: relative;
+            cursor: pointer;
+            overflow: hidden;
+        }
+
+        .calendar td:hover {
+            background: #f8f9fa;
+        }
+
+        .calendar td.other-month {
+            color: #bdc3c7;
+            background: #f8f9fa;
+        }
+
+        .calendar td.selected {
+            background: #e3f2fd;
+            border-color: #3498db;
+        }
+
+        .calendar td.today {
+            background: #fff3cd;
+        }
+
+        .day-number {
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .calendar-task {
+            background: #e3f2fd;
+            color: #2c3e50;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-top: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .day-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            height: fit-content;
+        }
+
+        .day-panel h3 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+
+        .add-task-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+
+        .add-task-btn:hover {
+            background: #219a52;
+        }
+
+        .task-list {
+            list-style: none;
+        }
+
+        .task-item {
+            background: #f8f9fa;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            border-left: 4px solid #3498db;
+        }
+
+        .task-item.recurring {
+            border-left-color: #9b59b6;
+        }
+
+        .task-time {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .task-title {
+            margin: 4px 0;
+        }
+
+        .task-actions {
+            margin-top: 8px;
+        }
+
+        .task-actions button {
+            background: none;
+            border: 1px solid #bdc3c7;
+            padding: 4px 8px;
+            margin-right: 5px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .task-actions button:hover {
+            background: #ecf0f1;
+        }
+
+        .task-actions button.delete {
+            color: #e74c3c;
+            border-color: #e74c3c;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .form-actions button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+
+        .btn-secondary {
+            background: #95a5a6;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #7f8c8d;
+        }
+
+        .recurring-options {
+            display: none;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+
+        .weekdays-selector {
+            display: flex;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .weekdays-selector label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .weekdays-selector input[type="checkbox"] {
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
