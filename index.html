@@ -66,8 +66,8 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Длительность (в минутах)</label>
-                    <input type="number" id="taskDuration" min="0">
+                    <label for="taskDuration">Длительность: <span id="durationLabel">0 мин</span></label>
+                    <input type="range" id="taskDuration" min="0" max="480" step="10" value="0" style="width: 100%;">
                 </div>
 
                 <div class="form-group">
@@ -357,7 +357,8 @@
             document.getElementById('taskType').value = task.type;
             document.getElementById('taskTitle').value = task.title;
             document.getElementById('taskTime').value = task.time;
-            document.getElementById('taskDuration').value = task.duration || '';
+            document.getElementById('taskDuration').value = task.duration || 0;
+            document.getElementById('durationLabel').textContent = `${task.duration || 0} мин`;
             document.getElementById('taskDescription').value = task.description || '';
             
             if (task.type === 'single') {
@@ -482,6 +483,10 @@
             if (e.target === this) {
                 closeModal();
             }
+        });
+
+        document.getElementById('taskDuration').addEventListener('input', function(e) {
+            document.getElementById('durationLabel').textContent = `${e.target.value} мин`;
         });
 
         // Инициализация
