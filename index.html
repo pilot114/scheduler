@@ -271,6 +271,17 @@
             displayTasksForDay(date);
         }
 
+        function timeToMinutes(timeString) {
+            const [hours, minutes] = timeString.split(':').map(Number);
+            return hours * 60 + minutes;
+        }
+
+        function minutesToTime(totalMinutes) {
+            const hours = Math.floor(totalMinutes / 60);
+            const minutes = totalMinutes % 60;
+            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+        }
+
         function formatDuration(minutes) {
             if (!minutes || minutes < 0) return '';
             const h = Math.floor(minutes / 60);
@@ -300,7 +311,25 @@
                 return;
             }
             
+            let currentTime = 0; // Minutes from midnight
+
             tasksForDay.forEach(task => {
+                const taskStartTime = timeToMinutes(task.time);
+                const taskEndTime = taskStartTime + parseInt(task.duration);
+
+                // Calculate and display gap before the current task
+                if (taskStartTime > currentTime) {
+                    const gap = taskStartTime - currentTime;
+                    const liGap = document.createElement('li');
+                    liGap.className = 'time-gap';
+                    liGap.innerHTML = `
+                        <div class="gap-info">
+                            Свободно: ${formatDuration(gap)}
+                        </div>
+                    `;
+                    taskList.appendChild(liGap);
+                }
+
                 const li = document.createElement('li');
                 li.className = `task-item ${task.type === 'recurring' ? 'recurring' : ''}`;
                 
@@ -326,7 +355,23 @@
                 
                 li.innerHTML = taskInfo;
                 taskList.appendChild(li);
+
+                currentTime = taskEndTime;
             });
+
+            // Calculate and display gap after the last task until end of day (23:59)
+            const endOfDay = 24 * 60; // 23:59 in minutes
+            if (endOfDay > currentTime) {
+                const gap = endOfDay - currentTime;
+                const liGap = document.createElement('li');
+                liGap.className = 'time-gap';
+                liGap.innerHTML = `
+                    <div class="gap-info">
+                        Свободно: ${formatDuration(gap)}
+                    </div>
+                `;
+                taskList.appendChild(liGap);
+            }
         }
 
         function changeMonth(direction) {
