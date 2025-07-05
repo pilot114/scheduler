@@ -219,7 +219,8 @@
         }
 
         .form-group label {
-            display: block;
+            display: flex;
+            align-items: center;
             margin-bottom: 5px;
             font-weight: bold;
         }
@@ -234,7 +235,8 @@
         }
 
         .form-group input[type=checkbox] {
-            width: 20px;
+            width: auto;
+            margin-right: 10px;
         }
 
         .form-group textarea {

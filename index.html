@@ -363,7 +363,7 @@
             editingTaskId = taskId;
             document.getElementById('modalTitle').textContent = 'Редактировать дело';
             
-            document.getElementById('taskType').value = task.type;
+            
             document.getElementById('taskTitle').value = task.title;
             document.getElementById('taskTime').value = task.time;
             document.getElementById('taskDuration').value = task.duration || 30;
@@ -462,7 +462,7 @@
                 description: description
             };
             
-            if (taskType === 'single') {
+            if (taskData.type === 'single') {
                 taskData.date = document.getElementById('taskDate').value;
             } else {
                 taskData.recurringType = document.getElementById('recurringType').value;
