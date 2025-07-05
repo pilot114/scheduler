@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Планировщик дел</title>
+    <title>Планировщик</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>Планировщик дел</h1>
+            <h1>Планировщик</h1>
         </div>
 
         <div class="main-content">
@@ -37,7 +37,6 @@
 
             <div class="day-panel">
                 <h3 id="selectedDate">Выберите день</h3>
-                <button class="add-task-btn" onclick="showAddTaskModal()">Добавить дело</button>
                 <ul class="task-list" id="taskList"></ul>
             </div>
         </div>
@@ -85,7 +84,7 @@
                         <select id="recurringType" onchange="toggleRecurringDetails()">
                             <option value="daily">Ежедневно</option>
                             <option value="weekly">Дни недели</option>
-                            <option value="monthly">Дни месяца</option>
+                            <option value="monthly">День месяца</option>
                         </select>
                     </div>
 
@@ -305,7 +304,7 @@
             const tasksForDay = getTasksForDate(date, true); // Включаем скрытые задачи
             const taskList = document.getElementById('taskList');
             taskList.innerHTML = '';
-            
+
             if (tasksForDay.length === 0) {
                 taskList.innerHTML = '<li style="text-align: center; color: #7f8c8d;">Нет запланированных дел</li>';
                 return;
@@ -325,6 +324,7 @@
                     liGap.innerHTML = `
                         <div class="gap-info">
                             Свободно: ${formatDuration(gap)}
+                            <button class="add-task-from-gap-btn" onclick="showAddTaskModalWithTime('${minutesToTime(currentTime)}', ${gap})">Добавить дело</button>
                         </div>
                     `;
                     taskList.appendChild(liGap);
@@ -368,6 +368,7 @@
                 liGap.innerHTML = `
                     <div class="gap-info">
                         Свободно: ${formatDuration(gap)}
+                        <button class="add-task-from-gap-btn" onclick="showAddTaskModalWithTime('${minutesToTime(currentTime)}', ${gap})">Добавить дело</button>
                     </div>
                 `;
                 taskList.appendChild(liGap);
@@ -384,6 +385,23 @@
                     selectDate(selectedDate);
                 }
             }
+        }
+
+        function showAddTaskModalWithTime(time, duration) {
+            if (!selectedDate) {
+                alert('Пожалуйста, выберите день в календаре');
+                return;
+            }
+            editingTaskId = null;
+            document.getElementById('modalTitle').textContent = 'Новое дело';
+            document.getElementById('taskForm').reset();
+            document.getElementById('taskDate').value = selectedDate;
+            document.getElementById('taskTime').value = time;
+            document.getElementById('taskDuration').value = duration;
+            document.getElementById('durationLabel').textContent = formatDurationLabel(duration);
+            document.getElementById('taskRecurring').checked = false;
+            document.getElementById('taskModal').style.display = 'flex';
+            toggleRecurringOptions();
         }
 
         function showAddTaskModal() {

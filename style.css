@@ -328,3 +328,18 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        .add-task-from-gap-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 5px;
+            font-size: 12px;
+        }
+
+        .add-task-from-gap-btn:hover {
+            background: #219a52;
+        }
