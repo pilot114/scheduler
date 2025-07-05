@@ -377,11 +377,6 @@
             const taskList = document.getElementById('taskList');
             taskList.innerHTML = '';
 
-            if (tasksForDay.length === 0) {
-                taskList.innerHTML = '<li style="text-align: center; color: #7f8c8d;">Нет запланированных дел</li>';
-                return;
-            }
-            
             let currentTime = 0; // Minutes from midnight
 
             tasksForDay.forEach(task => {
