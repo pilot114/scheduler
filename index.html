@@ -326,7 +326,7 @@
                             Свободно: ${formatDuration(gap)}
                         </div>
                     `;
-                    liGap.onclick = () => showAddTaskModalWithTime('${minutesToTime(currentTime)}', gap);
+                    liGap.onclick = () => showAddTaskModalWithTime(minutesToTime(currentTime), gap);
                     taskList.appendChild(liGap);
                 }
 
@@ -370,7 +370,7 @@
                         Свободно: ${formatDuration(gap)}
                     </div>
                 `;
-                liGap.onclick = () => showAddTaskModalWithTime('${minutesToTime(currentTime)}', gap);
+                liGap.onclick = () => showAddTaskModalWithTime(minutesToTime(currentTime), gap);
                 taskList.appendChild(liGap);
             }
         }
