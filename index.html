@@ -48,30 +48,21 @@
             <h3 id="modalTitle">Новое дело</h3>
             <form id="taskForm">
                 <div class="form-group">
-                    <label>Заголовок*</label>
-                    <input type="text" id="taskTitle" required>
+                    <input type="text" id="taskTitle" placeholder="Заголовок" required>
                 </div>
 
                 <div class="form-group">
-                    <label>Описание</label>
-                    <textarea id="taskDescription"></textarea>
+                    <textarea id="taskDescription" placeholder="Описание"></textarea>
                 </div>
 
                 <div class="form-group">
-                    <label>Время*</label>
+                    <label>Время</label>
                     <input type="time" id="taskTime" required>
                 </div>
 
                 <div class="form-group">
                     <label for="taskDuration">Длительность: <span id="durationLabel">30 мин</span></label>
-                    <input type="range" id="taskDuration" min="10" max="480" step="10" value="30" style="width: 100%;">
-                </div>
-
-                <div class="form-group">
-                    <label>
-                        <input type="checkbox" id="taskRecurring" onchange="toggleRecurringOptions()">
-                        Периодическое
-                    </label>
+                    <input type="range" id="taskDuration" min="10" max="600" step="10" value="30" style="width: 100%;">
                 </div>
 
                 <div class="form-group" id="singleDateGroup">
@@ -79,13 +70,22 @@
                     <input type="date" id="taskDate">
                 </div>
 
+                <div class="form-group">
+                    <div>
+                        <label>
+                            <input type="checkbox" id="taskRecurring" onchange="toggleRecurringOptions()">
+                            Периодическое
+                        </label>
+                    </div>
+                </div>
+
                 <div class="recurring-options" id="recurringOptions">
                     <div class="form-group">
                         <label>Период повторения</label>
                         <select id="recurringType" onchange="toggleRecurringDetails()">
                             <option value="daily">Ежедневно</option>
-                            <option value="weekly">Еженедельно</option>
-                            <option value="monthly">Ежемесячно</option>
+                            <option value="weekly">Дни недели</option>
+                            <option value="monthly">Дни месяца</option>
                         </select>
                     </div>
 
