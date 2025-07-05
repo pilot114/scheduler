@@ -145,6 +145,20 @@
             background: #219a52;
         }
 
+        .add-tag-btn {
+            background: #219a52;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 200px;
+        }
+
+        .add-tag-btn:hover {
+            background: #219a52;
+        }
+
         .task-list {
             list-style: none;
         }
@@ -333,4 +347,56 @@
         .task-item.completed {
             text-decoration: line-through;
             opacity: 0.6;
+        }
+
+        .task-tag {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            color: white;
+            font-size: 12px;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            cursor: pointer;
+        }
+
+        .task-tags-container {
+            margin-top: 5px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .task-tag.selected {
+            border: 2px solid #3498db;
+            box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
+        }
+
+        .tag-management-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+
+        .tag-management-item button {
+            margin-left: 10px;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .tag-management-item button:first-of-type {
+            background-color: #3498db;
+            color: white;
+            border: none;
+        }
+
+        .tag-management-item button:last-of-type {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
         }
