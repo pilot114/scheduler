@@ -324,9 +324,9 @@
                     liGap.innerHTML = `
                         <div class="gap-info">
                             Свободно: ${formatDuration(gap)}
-                            <button class="add-task-from-gap-btn" onclick="showAddTaskModalWithTime('${minutesToTime(currentTime)}', ${gap})">Добавить дело</button>
                         </div>
                     `;
+                    liGap.onclick = () => showAddTaskModalWithTime('${minutesToTime(currentTime)}', gap);
                     taskList.appendChild(liGap);
                 }
 
@@ -368,9 +368,9 @@
                 liGap.innerHTML = `
                     <div class="gap-info">
                         Свободно: ${formatDuration(gap)}
-                        <button class="add-task-from-gap-btn" onclick="showAddTaskModalWithTime('${minutesToTime(currentTime)}', ${gap})">Добавить дело</button>
                     </div>
                 `;
+                liGap.onclick = () => showAddTaskModalWithTime('${minutesToTime(currentTime)}', gap);
                 taskList.appendChild(liGap);
             }
         }
