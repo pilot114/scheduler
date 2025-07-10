@@ -209,7 +209,23 @@
                         cell.dataset.date = `${year}-${(month + 1).toString().padStart(2, '0')}-${date.toString().padStart(2, '0')}`;
                         cell.onclick = () => selectDate(cell.dataset.date);
                         
-                        const tasksForDay = getTasksForDate(currentDateObj);
+                        const tasksForDay = getTasksForDate(currentDateObj, true);
+                        const freeMinutes = calculateFreeMinutesForDay(currentDateObj);
+                        const freeHours = Math.floor(freeMinutes / 60);
+
+                        if (freeHours >= 1) {
+                            const freeHoursDiv = document.createElement('div');
+                            freeHoursDiv.className = 'free-hours';
+                            freeHoursDiv.textContent = `${freeHours}h`;
+                            cell.appendChild(freeHoursDiv);
+                        }
+
+                        if (freeHours < 2) {
+                            cell.classList.add('low-availability');
+                        } else if (freeHours < 4) {
+                            cell.classList.add('medium-availability');
+                        }
+
                         if (tasksForDay.length > 0) {
                             const tasksContainer = document.createElement('div');
                             tasksForDay.slice(0, 2).forEach(task => {
@@ -351,6 +367,27 @@
         }
 
         
+
+        function calculateFreeMinutesForDay(date) {
+            const tasksForDay = getTasksForDate(date, true);
+            let freeMinutes = 0;
+            let currentTime = 0;
+
+            tasksForDay.forEach(task => {
+                const taskStartTime = timeToMinutes(task.time);
+                if (taskStartTime > currentTime) {
+                    freeMinutes += taskStartTime - currentTime;
+                }
+                currentTime = taskStartTime + parseInt(task.duration);
+            });
+
+            const endOfDay = 24 * 60; // 23:59 in minutes
+            if (endOfDay > currentTime) {
+                freeMinutes += endOfDay - currentTime;
+            }
+
+            return freeMinutes;
+        }
 
         function displayTasksForDay(date) {
             const tasksForDay = getTasksForDate(date, true); // Включаем скрытые задачи

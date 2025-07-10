@@ -127,26 +127,41 @@
         }
 
         .calendar td.selected {
-            background: #e3f2fd;
-            border-color: #3498db;
+            box-shadow: inset 0 0 0 2px #3498db;
         }
 
         html.dark-mode .calendar td.selected {
-            background: #003d82;
-            border-color: #3498db;
-        }
-
-        .calendar td.today {
-            background: #fff3cd;
-        }
-
-        html.dark-mode .calendar td.today {
-            background: #5a4a1d;
+            box-shadow: inset 0 0 0 2px #3498db;
         }
 
         .day-number {
             font-weight: bold;
             margin-bottom: 4px;
+        }
+
+        .free-hours {
+            font-size: 12px;
+            font-weight: bold;
+            color: #27ae60; /* Green */
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+        }
+
+        .calendar td.low-availability {
+            background-color: #ffebee; /* Light Red */
+        }
+
+        .calendar td.medium-availability {
+            background-color: #fffde7; /* Light Yellow */
+        }
+
+        html.dark-mode .calendar td.low-availability {
+            background-color: #4a1e1e;
+        }
+
+        html.dark-mode .calendar td.medium-availability {
+            background-color: #4d4d1f;
         }
 
         .calendar-task {
