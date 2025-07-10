@@ -378,6 +378,12 @@
             margin-top: 10px;
         }
 
+        .date-range-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
         html.dark-mode .recurring-options {
             background: #333;
         }
