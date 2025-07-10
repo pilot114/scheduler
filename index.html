@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Планировщик</title>
     <link rel="stylesheet" href="style.css">
+    <script>
+        // Apply theme before page loads
+        const theme = localStorage.getItem('theme');
+        if (theme === 'dark-mode') {
+            document.documentElement.classList.add('dark-mode');
+        }
+    </script>
 </head>
 <body>
     <div class="container">
@@ -606,22 +613,18 @@
         selectDate(todayStr);
 
         const themeToggle = document.getElementById('theme-toggle');
-        const currentTheme = localStorage.getItem('theme');
 
-        if (currentTheme) {
-            document.body.classList.add(currentTheme);
-
-            if (currentTheme === 'dark-mode') {
-                themeToggle.checked = true;
-            }
+        // Set toggle state based on current theme
+        if (localStorage.getItem('theme') === 'dark-mode') {
+            themeToggle.checked = true;
         }
 
         themeToggle.addEventListener('change', () => {
             if (themeToggle.checked) {
-                document.body.classList.add('dark-mode');
+                document.documentElement.classList.add('dark-mode');
                 localStorage.setItem('theme', 'dark-mode');
             } else {
-                document.body.classList.remove('dark-mode');
+                document.documentElement.classList.remove('dark-mode');
                 localStorage.setItem('theme', 'light-mode');
             }
         });
