@@ -68,8 +68,8 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Время</label>
-                    <input type="time" id="taskTime" required>
+                    <label for="taskTime">Время: <span id="timeLabel">00:00</span></label>
+                    <input type="range" id="taskTime" min="0" max="1430" step="10" value="0" style="width: 100%;">
                 </div>
 
                 <div class="form-group">
@@ -150,6 +150,7 @@
         let selectedDate = null;
         let tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
         let editingTaskId = null;
+        let activeSlot = { startTime: 0, duration: 1440 };
 
         const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 
                           'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
@@ -301,7 +302,7 @@
             let result = '';
             if (h > 0) result += `${h} ч `;
             if (m > 0) result += `${m} мин`;
-            return `(${result.trim()})`;
+            return `${result.trim()}`;
         }
 
         function formatDurationLabel(minutes) {
@@ -338,6 +339,7 @@
                 // Calculate and display gap before the current task
                 if (taskStartTime > currentTime) {
                     const gap = taskStartTime - currentTime;
+                    const gapStartTime = currentTime;
                     const liGap = document.createElement('li');
                     liGap.className = 'time-gap';
                     liGap.innerHTML = `
@@ -345,7 +347,7 @@
                             Свободно: ${formatDuration(gap)}
                         </div>
                     `;
-                    liGap.onclick = () => showAddTaskModalWithTime(minutesToTime(currentTime), gap);
+                    liGap.onclick = () => showAddTaskModalWithTime(minutesToTime(gapStartTime), gap);
                     taskList.appendChild(liGap);
                 }
 
@@ -412,13 +414,26 @@
                 alert('Пожалуйста, выберите день в календаре');
                 return;
             }
+
+            activeSlot.startTime = timeToMinutes(time);
+            activeSlot.duration = duration;
+
             editingTaskId = null;
             document.getElementById('modalTitle').textContent = 'Новое дело';
             document.getElementById('taskForm').reset();
             document.getElementById('taskDate').value = selectedDate;
-            document.getElementById('taskTime').value = time;
-            document.getElementById('taskDuration').value = duration;
+
+            const taskTime = document.getElementById('taskTime');
+            taskTime.min = activeSlot.startTime;
+            taskTime.max = activeSlot.startTime + activeSlot.duration - 10;
+            taskTime.value = activeSlot.startTime;
+            document.getElementById('timeLabel').textContent = minutesToTime(activeSlot.startTime);
+
+            const taskDuration = document.getElementById('taskDuration');
+            taskDuration.max = activeSlot.duration;
+            taskDuration.value = duration;
             document.getElementById('durationLabel').textContent = formatDurationLabel(duration);
+
             document.getElementById('taskRecurring').checked = false;
             document.getElementById('taskModal').style.display = 'flex';
             toggleRecurringOptions();
@@ -434,6 +449,8 @@
             document.getElementById('modalTitle').textContent = 'Новое дело';
             document.getElementById('taskForm').reset();
             document.getElementById('taskDate').value = selectedDate;
+            document.getElementById('taskTime').value = 0;
+            document.getElementById('timeLabel').textContent = '00:00';
             document.getElementById('taskRecurring').checked = false; // Сброс чекбокса
             document.getElementById('taskModal').style.display = 'flex';
             toggleRecurringOptions();
@@ -442,15 +459,27 @@
         function editTask(taskId) {
             const task = tasks.find(t => t.id === taskId);
             if (!task) return;
+
+            activeSlot.startTime = 0; // Reset for editing
+            activeSlot.duration = 1440;
             
             editingTaskId = taskId;
             document.getElementById('modalTitle').textContent = 'Редактировать дело';
             
             
             document.getElementById('taskTitle').value = task.title;
-            document.getElementById('taskTime').value = task.time;
-            document.getElementById('taskDuration').value = task.duration || 30;
+
+            const taskTime = document.getElementById('taskTime');
+            taskTime.min = 0;
+            taskTime.max = 1430;
+            taskTime.value = timeToMinutes(task.time);
+            document.getElementById('timeLabel').textContent = task.time;
+
+            const taskDuration = document.getElementById('taskDuration');
+            taskDuration.max = 600; // Reset to a reasonable max
+            taskDuration.value = task.duration || 30;
             document.getElementById('durationLabel').textContent = formatDurationLabel(task.duration || 30);
+
             document.getElementById('taskDescription').value = task.description || '';
             document.getElementById('taskRecurring').checked = (task.type === 'recurring');
             
@@ -544,7 +573,7 @@
             
             const isRecurring = document.getElementById('taskRecurring').checked;
             const title = document.getElementById('taskTitle').value;
-            const time = document.getElementById('taskTime').value;
+            const time = minutesToTime(document.getElementById('taskTime').value);
             const duration = document.getElementById('taskDuration').value;
             const description = document.getElementById('taskDescription').value;
             
@@ -602,6 +631,20 @@
 
         document.getElementById('taskDuration').addEventListener('input', function(e) {
             document.getElementById('durationLabel').textContent = formatDurationLabel(e.target.value);
+        });
+
+        document.getElementById('taskTime').addEventListener('input', function(e) {
+            const selectedTime = parseInt(e.target.value);
+            document.getElementById('timeLabel').textContent = minutesToTime(selectedTime);
+
+            const taskDuration = document.getElementById('taskDuration');
+            const maxDuration = activeSlot.startTime + activeSlot.duration - selectedTime;
+            taskDuration.max = maxDuration;
+
+            if (parseInt(taskDuration.value) > maxDuration) {
+                taskDuration.value = maxDuration;
+            }
+            document.getElementById('durationLabel').textContent = formatDurationLabel(taskDuration.value);
         });
 
         // Инициализация
