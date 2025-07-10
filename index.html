@@ -102,7 +102,6 @@
                     </div>
 
                     <div id="weeklyOptions" style="display: none; padding-bottom: 15px;">
-                        <label>Дни недели:</label>
                         <div class="weekdays-selector">
                             <label><span>Пн</span><input type="checkbox" value="1"></label>
                             <label><span>Вт</span><input type="checkbox" value="2"></label>
@@ -114,9 +113,19 @@
                         </div>
                     </div>
 
-                    <div id="monthlyOptions" style="display: none; padding-bottom: 15px;">
-                        <label>День месяца:</label>
-                        <input type="number" id="monthDay" min="1" max="31" value="1">
+                    <div id="monthlyOptions" style="display: none;">
+                        <div class="monthly-options-grid">
+                            <div class="form-group">
+                                <label for="monthDays">Дни месяца (через запятую)</label>
+                                <input type="text" id="monthDays" placeholder="1, 15, 31" value="1">
+                            </div>
+                            <div class="form-group checkbox-group">
+                                <label>
+                                    <input type="checkbox" id="countFromEnd">
+                                    Считать с конца месяца
+                                </label>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="date-range-group">
@@ -254,7 +263,23 @@
                 const dayOfWeek = date.getDay();
                 return task.weekdays && task.weekdays.includes(dayOfWeek.toString());
             } else if (task.recurringType === 'monthly') {
-                return date.getDate() === task.monthDay;
+                // Handle new format (comma-separated string)
+                if (task.monthDays) {
+                    const daysInMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+                    const monthDays = task.monthDays.split(',').map(d => parseInt(d.trim())).filter(d => !isNaN(d));
+
+                    if (task.countFromEnd) {
+                        const targetDays = monthDays.map(d => daysInMonth - d + 1);
+                        return targetDays.includes(date.getDate());
+                    } else {
+                        return monthDays.includes(date.getDate());
+                    }
+                } 
+                // Handle old format (single number) for backward compatibility
+                else if (task.monthDay) {
+                    return date.getDate() === task.monthDay;
+                }
+                return false; // If neither is present, it's not active
             }
             
             return false;
@@ -494,7 +519,8 @@
                         cb.checked = task.weekdays.includes(cb.value);
                     });
                 } else if (task.recurringType === 'monthly') {
-                    document.getElementById('monthDay').value = task.monthDay;
+                    document.getElementById('monthDays').value = task.monthDays || (task.monthDay ? task.monthDay.toString() : '1');
+                    document.getElementById('countFromEnd').checked = task.countFromEnd || false;
                 }
             }
             
@@ -601,7 +627,9 @@
                     taskData.weekdays = Array.from(document.querySelectorAll('.weekdays-selector input:checked'))
                         .map(cb => cb.value);
                 } else if (taskData.recurringType === 'monthly') {
-                    taskData.monthDay = parseInt(document.getElementById('monthDay').value);
+                    taskData.monthDays = document.getElementById('monthDays').value;
+                    taskData.countFromEnd = document.getElementById('countFromEnd').checked;
+                    delete taskData.monthDay; // Remove old property
                 }
             }
             

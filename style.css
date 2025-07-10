@@ -408,6 +408,17 @@
             border-color: #555;
         }
 
+        .monthly-options-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 15px;
+            align-items: end;
+        }
+
+        .checkbox-group {
+            margin-bottom: 10px; /* Align checkbox with the input field */
+        }
+
         .weekdays-selector input[type="checkbox"] {
             margin-top: 5px;
         }
