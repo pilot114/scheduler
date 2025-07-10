@@ -8,6 +8,12 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background-color: #f5f5f5;
             color: #333;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        body.dark-mode {
+            background-color: #1a1a1a;
+            color: #f1f1f1;
         }
 
         .container {
@@ -23,6 +29,13 @@
             border-radius: 8px;
             margin-bottom: 20px;
             text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        body.dark-mode .header {
+            background-color: #2c3e50;
         }
 
         .main-content {
@@ -36,6 +49,11 @@
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        body.dark-mode .calendar-section {
+            background: #2a2a2a;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
         }
 
         .month-selector {
@@ -72,6 +90,10 @@
             text-align: center;
         }
 
+        body.dark-mode .calendar th {
+            background: #3c4043;
+        }
+
         .calendar td {
             border: 1px solid #ecf0f1;
             padding: 5px;
@@ -82,8 +104,16 @@
             overflow: hidden;
         }
 
+        body.dark-mode .calendar td {
+            border-color: #444;
+        }
+
         .calendar td:hover {
             background: #f8f9fa;
+        }
+
+        body.dark-mode .calendar td:hover {
+            background: #333;
         }
 
         .calendar td.other-month {
@@ -91,13 +121,27 @@
             background: #f8f9fa;
         }
 
+        body.dark-mode .calendar td.other-month {
+            color: #666;
+            background: #222;
+        }
+
         .calendar td.selected {
             background: #e3f2fd;
             border-color: #3498db;
         }
 
+        body.dark-mode .calendar td.selected {
+            background: #003d82;
+            border-color: #3498db;
+        }
+
         .calendar td.today {
             background: #fff3cd;
+        }
+
+        body.dark-mode .calendar td.today {
+            background: #5a4a1d;
         }
 
         .day-number {
@@ -117,6 +161,11 @@
             text-overflow: ellipsis;
         }
 
+        body.dark-mode .calendar-task {
+            background: #004a7f;
+            color: #f1f1f1;
+        }
+
         .day-panel {
             background: white;
             padding: 20px;
@@ -125,9 +174,18 @@
             height: fit-content;
         }
 
+        body.dark-mode .day-panel {
+            background: #2a2a2a;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
         .day-panel h3 {
             margin-bottom: 15px;
             color: #2c3e50;
+        }
+
+        body.dark-mode .day-panel h3 {
+            color: #f1f1f1;
         }
 
         .add-task-btn {
@@ -145,19 +203,7 @@
             background: #219a52;
         }
 
-        .add-tag-btn {
-            background: #219a52;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-            width: 200px;
-        }
-
-        .add-tag-btn:hover {
-            background: #219a52;
-        }
+        
 
         .task-list {
             list-style: none;
@@ -171,13 +217,26 @@
             border-left: 4px solid #3498db;
         }
 
+        body.dark-mode .task-item {
+            background: #333;
+            border-left-color: #3498db;
+        }
+
         .task-item.recurring {
+            border-left-color: #9b59b6;
+        }
+
+        body.dark-mode .task-item.recurring {
             border-left-color: #9b59b6;
         }
 
         .task-time {
             font-weight: bold;
             color: #2c3e50;
+        }
+
+        body.dark-mode .task-time {
+            color: #f1f1f1;
         }
 
         .task-title {
@@ -198,8 +257,17 @@
             font-size: 12px;
         }
 
+        body.dark-mode .task-actions button {
+            color: #f1f1f1;
+            border-color: #666;
+        }
+
         .task-actions button:hover {
             background: #ecf0f1;
+        }
+
+        body.dark-mode .task-actions button:hover {
+            background: #444;
         }
 
         .task-actions button.delete {
@@ -228,6 +296,10 @@
             max-width: 500px;
         }
 
+        body.dark-mode .modal-content {
+            background: #2a2a2a;
+        }
+
         .form-group {
             margin-bottom: 15px;
         }
@@ -246,6 +318,14 @@
             padding: 8px;
             border: 1px solid #ddd;
             border-radius: 4px;
+        }
+
+        body.dark-mode .form-group input,
+        body.dark-mode .form-group select,
+        body.dark-mode .form-group textarea {
+            background: #333;
+            color: #f1f1f1;
+            border-color: #555;
         }
 
         .form-group input[type=checkbox] {
@@ -298,6 +378,10 @@
             margin-top: 10px;
         }
 
+        body.dark-mode .recurring-options {
+            background: #333;
+        }
+
         .weekdays-selector {
             display: flex;
             gap: 5px;
@@ -312,6 +396,10 @@
             border: 1px solid #ddd;
             border-radius: 4px;
             cursor: pointer;
+        }
+
+        body.dark-mode .weekdays-selector label {
+            border-color: #555;
         }
 
         .weekdays-selector input[type="checkbox"] {
@@ -334,6 +422,12 @@
             cursor: pointer;
         }
 
+        body.dark-mode .time-gap {
+            background: #00343d;
+            color: #7ddde8;
+            border-left-color: #00bcd4;
+        }
+
         .gap-info {
             font-size: 14px;
         }
@@ -349,54 +443,60 @@
             opacity: 0.6;
         }
 
-        .task-tag {
+        /* Theme switcher */
+        .theme-switcher {
+            position: relative;
             display: inline-block;
-            padding: 3px 8px;
-            border-radius: 12px;
-            color: white;
-            font-size: 12px;
-            margin-right: 5px;
-            margin-bottom: 5px;
+            width: 60px;
+            height: 34px;
+        }
+
+        .theme-switcher input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
             cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
         }
 
-        .task-tags-container {
-            margin-top: 5px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
         }
 
-        .task-tag.selected {
-            border: 2px solid #3498db;
-            box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
+        input:checked + .slider {
+            background-color: #2196F3;
         }
 
-        .tag-management-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px;
-            border: 1px solid #eee;
-            border-radius: 4px;
-            margin-bottom: 8px;
+        input:focus + .slider {
+            box-shadow: 0 0 1px #2196F3;
         }
 
-        .tag-management-item button {
-            margin-left: 10px;
-            padding: 5px 10px;
-            border-radius: 4px;
-            cursor: pointer;
+        input:checked + .slider:before {
+            transform: translateX(26px);
         }
 
-        .tag-management-item button:first-of-type {
-            background-color: #3498db;
-            color: white;
-            border: none;
+        .slider.round {
+            border-radius: 34px;
         }
 
-        .tag-management-item button:last-of-type {
-            background-color: #e74c3c;
-            color: white;
-            border: none;
+        .slider.round:before {
+            border-radius: 50%;
         }

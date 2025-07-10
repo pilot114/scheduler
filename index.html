@@ -10,6 +10,12 @@
     <div class="container">
         <div class="header">
             <h1>Планировщик</h1>
+            <div class="theme-switcher">
+                <label class="switch">
+                    <input type="checkbox" id="theme-toggle">
+                    <span class="slider round"></span>
+                </label>
+            </div>
         </div>
 
         <div class="main-content">
@@ -39,8 +45,7 @@
                 <h3 id="selectedDate">Выберите день</h3>
                 <ul class="task-list" id="taskList"></ul>
             </div>
-            <button type="button" class="add-tag-btn" onclick="showTagManagementModal()">Управление тегами</button>
-        </div>
+            </div>
     </div>
 
     <div class="modal" id="taskModal">
@@ -125,11 +130,6 @@
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label>Теги</label>
-                    <div id="taskTagsSelection"></div>
-                </div>
-
                 <div class="form-actions">
                     <button type="submit" class="btn-primary">Сохранить</button>
                     <button type="button" class="btn-secondary" onclick="closeModal()">Отмена</button>
@@ -138,37 +138,11 @@
         </div>
     </div>
 
-    <div class="modal" id="tagManagementModal">
-        <div class="modal-content">
-            <h3>Управление тегами</h3>
-            <div class="form-group">
-                <label for="newTagName">Название тега</label>
-                <input type="text" id="newTagName" placeholder="Название тега">
-            </div>
-            <div class="form-group">
-                <label for="newTagColor">Цвет тега</label>
-                <select id="newTagColor">
-                    <option value="#c1442e" style="background-color: #c1442e; color: white;">Красный</option>
-                    <option value="#f3c13a" style="background-color: #f3c13a; color: white;">Желтый</option>
-                    <option value="#3b5ba0" style="background-color: #3b5ba0; color: white;">Синий</option>
-                    <option value="#76a35c" style="background-color: #76a35c; color: white;">Зеленый</option>
-                </select>
-            </div>
-            <button type="button" class="btn-primary" id="addTagButton">Добавить тег</button>
-            <div id="allTagsDisplay" style="margin-top: 20px;"></div>
-            <div class="form-actions">
-                <button type="button" class="btn-secondary" onclick="closeTagManagementModal()">Закрыть</button>
-            </div>
-        </div>
-    </div>
-
     <script>
         let currentDate = new Date();
         let selectedDate = null;
         let tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
         let editingTaskId = null;
-        let allTags = JSON.parse(localStorage.getItem('allTags') || '[]');
-        let selectedTaskTags = []; // New: To store tags selected for the current task
 
         const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 
                           'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
@@ -341,36 +315,7 @@
             return result.trim() || '0 мин';
         }
 
-        function addTag() {
-            const tagNameInput = document.getElementById('tagNameInput');
-            const tagColorSelect = document.getElementById('tagColorSelect');
-            const tagName = tagNameInput.value.trim();
-            const tagColor = tagColorSelect.value;
-
-            if (tagName && !currentTags.some(tag => tag.name === tagName)) {
-                currentTags.push({ name: tagName, color: tagColor });
-                tagNameInput.value = '';
-                renderTags();
-            }
-        }
-
-        function renderTags() {
-            const currentTagsDisplay = document.getElementById('currentTagsDisplay');
-            currentTagsDisplay.innerHTML = '';
-            currentTags.forEach(tag => {
-                const tagSpan = document.createElement('span');
-                tagSpan.className = 'task-tag';
-                tagSpan.style.backgroundColor = tag.color;
-                tagSpan.textContent = tag.name;
-                tagSpan.onclick = () => removeTag(tag.name);
-                currentTagsDisplay.appendChild(tagSpan);
-            });
-        }
-
-        function removeTag(tagName) {
-            currentTags = currentTags.filter(tag => tag.name !== tagName);
-            renderTags();
-        }
+        
 
         function displayTasksForDay(date) {
             const tasksForDay = getTasksForDate(date, true); // Включаем скрытые задачи
@@ -407,14 +352,6 @@
                 
                 if (task.description) {
                     taskInfo += `<div style="font-size: 14px; color: #7f8c8d; margin-top: 4px;">${task.description}</div>`;
-                }
-
-                if (task.tags && task.tags.length > 0) {
-                    taskInfo += `<div class="task-tags-container">`;
-                    task.tags.forEach(tag => {
-                        taskInfo += `<span class="task-tag" style="background-color: ${tag.color};">${tag.name}</span>`;
-                    });
-                    taskInfo += `</div>`;
                 }
                 
                 if (task.type === 'recurring') {
@@ -491,8 +428,6 @@
             document.getElementById('taskForm').reset();
             document.getElementById('taskDate').value = selectedDate;
             document.getElementById('taskRecurring').checked = false; // Сброс чекбокса
-            selectedTaskTags = []; // Reset selected tags
-            renderTaskTagsSelection(); // Render empty tags
             document.getElementById('taskModal').style.display = 'flex';
             toggleRecurringOptions();
         }
@@ -511,8 +446,6 @@
             document.getElementById('durationLabel').textContent = formatDurationLabel(task.duration || 30);
             document.getElementById('taskDescription').value = task.description || '';
             document.getElementById('taskRecurring').checked = (task.type === 'recurring');
-            selectedTaskTags = task.tags || []; // Load existing tags
-            renderTaskTagsSelection(); // Render loaded tags
             
             if (task.type === 'single') {
                 document.getElementById('taskDate').value = task.date;
@@ -597,107 +530,7 @@
             localStorage.setItem('tasks', JSON.stringify(tasks));
         }
 
-        function saveAllTags() {
-            localStorage.setItem('allTags', JSON.stringify(allTags));
-        }
-
-        function showTagManagementModal() {
-            document.getElementById('tagManagementModal').style.display = 'flex';
-            renderAllTags();
-        }
-
-        function closeTagManagementModal() {
-            document.getElementById('tagManagementModal').style.display = 'none';
-        }
-
-        function addTagToAllTags() {
-            const newTagNameInput = document.getElementById('newTagName');
-            const newTagColorSelect = document.getElementById('newTagColor');
-            const tagName = newTagNameInput.value.trim();
-            const tagColor = newTagColorSelect.value;
-
-            if (tagName && !allTags.some(tag => tag.name === tagName)) {
-                allTags.push({ id: Date.now().toString(), name: tagName, color: tagColor });
-                newTagNameInput.value = '';
-                saveAllTags();
-                renderAllTags();
-            }
-        }
-
-        function renderAllTags() {
-            const allTagsDisplay = document.getElementById('allTagsDisplay');
-            allTagsDisplay.innerHTML = '';
-            allTags.forEach(tag => {
-                const tagDiv = document.createElement('div');
-                tagDiv.className = 'tag-management-item';
-                tagDiv.innerHTML = `
-                    <span class="task-tag" style="background-color: ${tag.color};">${tag.name}</span>
-                    <button onclick="editExistingTag('${tag.id}')">Редактировать</button>
-                    <button onclick="deleteExistingTag('${tag.id}')">Удалить</button>
-                `;
-                allTagsDisplay.appendChild(tagDiv);
-            });
-        }
-
-        function editExistingTag(tagId) {
-            const tag = allTags.find(t => t.id === tagId);
-            if (tag) {
-                const newName = prompt('Введите новое название для тега:', tag.name);
-                if (newName !== null && newName.trim() !== '') {
-                    tag.name = newName.trim();
-                    const newColor = prompt('Введите новый цвет для тега (например, #RRGGBB):', tag.color);
-                    if (newColor !== null && newColor.trim() !== '') {
-                        tag.color = newColor.trim();
-                    }
-                    saveAllTags();
-                    renderAllTags();
-                }
-            }
-        }
-
-        function deleteExistingTag(tagId) {
-            if (confirm('Вы уверены, что хотите удалить этот тег?')) {
-                allTags = allTags.filter(tag => tag.id !== tagId);
-                saveAllTags();
-                renderAllTags();
-            }
-        }
-
-        function deleteExistingTag(tagId) {
-            if (confirm('Вы уверены, что хотите удалить этот тег?')) {
-                allTags = allTags.filter(tag => tag.id !== tagId);
-                saveAllTags();
-                renderAllTags();
-            }
-        }
-
-        function renderTaskTagsSelection() {
-            const taskTagsSelectionDiv = document.getElementById('taskTagsSelection');
-            taskTagsSelectionDiv.innerHTML = '';
-
-            allTags.forEach(tag => {
-                const tagSpan = document.createElement('span');
-                tagSpan.className = 'task-tag';
-                tagSpan.style.backgroundColor = tag.color;
-                tagSpan.textContent = tag.name;
-                tagSpan.dataset.tagId = tag.id; // Store tag ID
-
-                if (selectedTaskTags.some(selectedTag => selectedTag.id === tag.id)) {
-                    tagSpan.classList.add('selected');
-                }
-
-                tagSpan.onclick = () => {
-                    const index = selectedTaskTags.findIndex(selectedTag => selectedTag.id === tag.id);
-                    if (index === -1) {
-                        selectedTaskTags.push(tag);
-                    } else {
-                        selectedTaskTags.splice(index, 1);
-                    }
-                    renderTaskTagsSelection(); // Re-render to update selection
-                };
-                taskTagsSelectionDiv.appendChild(tagSpan);
-            });
-        }
+        
 
         document.getElementById('taskForm').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -719,8 +552,7 @@
                 title: title,
                 time: time,
                 duration: duration,
-                description: description,
-                tags: selectedTaskTags // Save selected tags
+                description: description
             };
             
             if (taskData.type === 'single') {
@@ -765,8 +597,6 @@
             document.getElementById('durationLabel').textContent = formatDurationLabel(e.target.value);
         });
 
-        document.getElementById('addTagButton').addEventListener('click', addTagToAllTags);
-
         // Инициализация
         generateCalendar();
         
@@ -774,6 +604,27 @@
         const today = new Date();
         const todayStr = formatDate(today);
         selectDate(todayStr);
+
+        const themeToggle = document.getElementById('theme-toggle');
+        const currentTheme = localStorage.getItem('theme');
+
+        if (currentTheme) {
+            document.body.classList.add(currentTheme);
+
+            if (currentTheme === 'dark-mode') {
+                themeToggle.checked = true;
+            }
+        }
+
+        themeToggle.addEventListener('change', () => {
+            if (themeToggle.checked) {
+                document.body.classList.add('dark-mode');
+                localStorage.setItem('theme', 'dark-mode');
+            } else {
+                document.body.classList.remove('dark-mode');
+                localStorage.setItem('theme', 'light-mode');
+            }
+        });
     </script>
 </body>
 </html>
