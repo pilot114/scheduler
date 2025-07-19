@@ -1,9 +1,9 @@
 const CACHE_NAME = 'task-planner-cache-v1';
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/style.css',
-  '/manifest.json'
+  '.',
+  'index.html',
+  'style.css',
+  'manifest.json'
 ];
 
 self.addEventListener('install', event => {
