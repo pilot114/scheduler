@@ -20,13 +20,7 @@
             <h1>Планировщик</h1>
             <div class="controls">
                 <button id="installPwaButton" style="display: none;">Установить</button>
-                <button id="notifyButton">Включить уведомления</button>
-                <div class="theme-switcher">
-                    <label class="switch">
-                        <input type="checkbox" id="theme-toggle">
-                        <span class="slider round"></span>
-                    </label>
-                </div>
+                <button id="settings-btn" class="settings-button">⚙️</button>
             </div>
         </div>
 
@@ -58,6 +52,35 @@
                 <ul class="task-list" id="taskList"></ul>
             </div>
             </div>
+    </div>
+
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <h3>Настройки</h3>
+            <div class="form-group">
+                <label>Шаг (минуты)</label>
+                <div class="radio-group">
+                    <label><input type="radio" name="step" value="5"><span>5</span></label>
+                    <label><input type="radio" name="step" value="10" checked><span>10</span></label>
+                    <label><input type="radio" name="step" value="15"><span>15</span></label>
+                    <label><input type="radio" name="step" value="30"><span>30</span></label>
+                    <label><input type="radio" name="step" value="60"><span>60</span></label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="theme-toggle-modal">Тёмная тема</label>
+                <div class="theme-switcher">
+                    <label class="switch">
+                        <input type="checkbox" id="theme-toggle-modal">
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="notifyButton-modal">Уведомления</label>
+                <button id="notifyButton-modal">Включить уведомления</button>
+            </div>
+        </div>
     </div>
 
     <div class="modal" id="taskModal">
@@ -167,11 +190,17 @@
         let tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
         let editingTaskId = null;
         let activeSlot = { startTime: 0, duration: 1440 };
+        let settings = JSON.parse(localStorage.getItem('settings')) || {
+            step: 10,
+            theme: 'light-mode',
+            notifications: false
+        };
 
         const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 
                           'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
 
         function checkNotifications() {
+            if (!settings.notifications) return;
             const now = new Date();
             tasks.forEach(task => {
                 if (task.type === 'single' && !task.completed) {
@@ -191,7 +220,7 @@
         }
 
         function initializeNotifications() {
-            const notifyButton = document.getElementById('notifyButton');
+            const notifyButton = document.getElementById('notifyButton-modal');
             if (!('Notification' in window)) {
                 notifyButton.textContent = 'Уведомления не поддерживаются';
                 notifyButton.disabled = true;
@@ -199,6 +228,7 @@
             }
 
             if (Notification.permission === 'granted') {
+                settings.notifications = true;
                 notifyButton.textContent = 'Уведомления включены';
                 notifyButton.disabled = true;
                 setInterval(checkNotifications, 60000); // Check every minute
@@ -206,6 +236,7 @@
                 notifyButton.addEventListener('click', () => {
                     Notification.requestPermission().then(permission => {
                         if (permission === 'granted') {
+                            settings.notifications = true;
                             notifyButton.textContent = 'Уведомления включены';
                             notifyButton.disabled = true;
                             setInterval(checkNotifications, 60000);
@@ -670,8 +701,34 @@
             document.getElementById('taskModal').style.display = 'none';
         }
 
+        function closeSettingsModal() {
+            document.getElementById('settingsModal').style.display = 'none';
+        }
+
         function saveTasks() {
             localStorage.setItem('tasks', JSON.stringify(tasks));
+        }
+
+        function saveSettings() {
+            settings.step = parseInt(document.querySelector('input[name="step"]:checked').value);
+            settings.theme = document.getElementById('theme-toggle-modal').checked ? 'dark-mode' : 'light-mode';
+            localStorage.setItem('settings', JSON.stringify(settings));
+            applySettings();
+        }
+
+        function applySettings() {
+            document.getElementById('taskTime').step = settings.step;
+            document.getElementById('taskDuration').step = settings.step;
+            if (settings.theme === 'dark-mode') {
+                document.documentElement.classList.add('dark-mode');
+            } else {
+                document.documentElement.classList.remove('dark-mode');
+            }
+            document.getElementById('theme-toggle-modal').checked = settings.theme === 'dark-mode';
+            const stepRadio = document.querySelector(`input[name="step"][value="${settings.step}"]`);
+            if (stepRadio) {
+                stepRadio.checked = true;
+            }
         }
 
         document.getElementById('taskForm').addEventListener('submit', function(e) {
@@ -737,6 +794,26 @@
             }
         });
 
+        document.getElementById('settingsModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeSettingsModal();
+            }
+        });
+
+        document.getElementById('settings-btn').addEventListener('click', () => {
+            document.getElementById('theme-toggle-modal').checked = settings.theme === 'dark-mode';
+            const stepRadio = document.querySelector(`input[name="step"][value="${settings.step}"]`);
+            if (stepRadio) {
+                stepRadio.checked = true;
+            }
+            document.getElementById('settingsModal').style.display = 'flex';
+        });
+
+        document.querySelectorAll('input[name="step"]').forEach(radio => {
+            radio.addEventListener('change', saveSettings);
+        });
+        document.getElementById('theme-toggle-modal').addEventListener('change', saveSettings);
+
         document.getElementById('taskDuration').addEventListener('input', function(e) {
             document.getElementById('durationLabel').textContent = formatDurationLabel(e.target.value);
         });
@@ -756,29 +833,15 @@
         });
 
         // Инициализация
-        generateCalendar();
-        initializeNotifications();
-        
-        // Автоматически выбираем текущий день
-        const today = new Date();
-        const todayStr = formatDate(today);
-        selectDate(todayStr);
-
-        const themeToggle = document.getElementById('theme-toggle');
-
-        // Set toggle state based on current theme
-        if (localStorage.getItem('theme') === 'dark-mode') {
-            themeToggle.checked = true;
-        }
-
-        themeToggle.addEventListener('change', () => {
-            if (themeToggle.checked) {
-                document.documentElement.classList.add('dark-mode');
-                localStorage.setItem('theme', 'dark-mode');
-            } else {
-                document.documentElement.classList.remove('dark-mode');
-                localStorage.setItem('theme', 'light-mode');
-            }
+        document.addEventListener('DOMContentLoaded', () => {
+            generateCalendar();
+            initializeNotifications();
+            applySettings();
+            
+            // Автоматически выбираем текущий день
+            const today = new Date();
+            const todayStr = formatDate(today);
+            selectDate(todayStr);
         });
 
         if ('serviceWorker' in navigator) {
