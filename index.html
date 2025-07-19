@@ -18,6 +18,7 @@
         <div class="header">
             <h1>Планировщик</h1>
             <div class="controls">
+                <button id="installPwaButton" style="display: none;">Установить</button>
                 <button id="notifyButton">Включить уведомления</button>
                 <div class="theme-switcher">
                     <label class="switch">
@@ -777,6 +778,38 @@
                 document.documentElement.classList.remove('dark-mode');
                 localStorage.setItem('theme', 'light-mode');
             }
+        });
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').then(registration => {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                }, err => {
+                    console.log('ServiceWorker registration failed: ', err);
+                });
+            });
+        }
+
+        let deferredPrompt;
+        const installButton = document.getElementById('installPwaButton');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installButton.style.display = 'block';
+
+            installButton.addEventListener('click', () => {
+                installButton.style.display = 'none';
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted the A2HS prompt');
+                    } else {
+                        console.log('User dismissed the A2HS prompt');
+                    }
+                    deferredPrompt = null;
+                });
+            });
         });
     </script>
 </body>
