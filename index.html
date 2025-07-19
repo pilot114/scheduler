@@ -753,6 +753,50 @@
             document.getElementById('settingsModal').style.display = 'none';
         }
 
+        function checkOverlap(task) {
+            const newStartTime = timeToMinutes(task.time);
+            const newEndTime = newStartTime + parseInt(task.duration);
+            const overlappingTasks = [];
+
+            for (const existingTask of tasks) {
+                if (task.id === existingTask.id) {
+                    continue; // Don't compare a task with itself
+                }
+
+                const existingStartTime = timeToMinutes(existingTask.time);
+                const existingEndTime = existingStartTime + parseInt(existingTask.duration);
+
+                const overlap = (newStartTime < existingEndTime && newEndTime > existingStartTime);
+
+                if (task.type === 'single' && existingTask.type === 'single') {
+                    if (task.date === existingTask.date && overlap) {
+                        overlappingTasks.push(existingTask);
+                    }
+                } else if (task.type === 'single' && existingTask.type === 'recurring') {
+                    const taskDate = new Date(task.date);
+                    if (isTaskActiveOnDate(existingTask, taskDate) && overlap) {
+                        overlappingTasks.push(existingTask);
+                    }
+                } else if (task.type === 'recurring' && existingTask.type === 'single') {
+                    const existingTaskDate = new Date(existingTask.date);
+                    if (isTaskActiveOnDate(task, existingTaskDate) && overlap) {
+                        overlappingTasks.push(existingTask);
+                    }
+                } else if (task.type === 'recurring' && existingTask.type === 'recurring') {
+                    const start = new Date(Math.max(new Date(task.startDate).getTime(), new Date(existingTask.startDate).getTime()));
+                    const end = new Date(Math.min(new Date(task.endDate || '9999-12-31').getTime(), new Date(existingTask.endDate || '9999-12-31').getTime()));
+
+                    for (let d = start; d <= end; d.setDate(d.getDate() + 1)) {
+                        if (isTaskActiveOnDate(task, d) && isTaskActiveOnDate(existingTask, d) && overlap) {
+                            overlappingTasks.push(existingTask);
+                            break; // Found an overlap for this task, no need to check further dates
+                        }
+                    }
+                }
+            }
+            return overlappingTasks;
+        }
+
         function saveTasks() {
             localStorage.setItem('tasks', JSON.stringify(tasks));
         }
@@ -819,6 +863,13 @@
                     taskData.countFromEnd = document.getElementById('countFromEnd').checked;
                     delete taskData.monthDay; // Remove old property
                 }
+            }
+            
+            const overlappingTasks = checkOverlap(taskData);
+            if (overlappingTasks.length > 0) {
+                const taskTitles = overlappingTasks.map(t => t.title).join(', ');
+                alert(`Задача пересекается со следующими задачами: ${taskTitles}`);
+                return;
             }
             
             if (editingTaskId) {
