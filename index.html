@@ -17,11 +17,14 @@
     <div class="container">
         <div class="header">
             <h1>Планировщик</h1>
-            <div class="theme-switcher">
-                <label class="switch">
-                    <input type="checkbox" id="theme-toggle">
-                    <span class="slider round"></span>
-                </label>
+            <div class="controls">
+                <button id="notifyButton">Включить уведомления</button>
+                <div class="theme-switcher">
+                    <label class="switch">
+                        <input type="checkbox" id="theme-toggle">
+                        <span class="slider round"></span>
+                    </label>
+                </div>
             </div>
         </div>
 
@@ -165,6 +168,53 @@
 
         const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 
                           'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+
+        function checkNotifications() {
+            const now = new Date();
+            tasks.forEach(task => {
+                if (task.type === 'single' && !task.completed) {
+                    const taskDate = new Date(task.date + 'T' + task.time);
+                    const diff = taskDate.getTime() - now.getTime();
+                    const diffMinutes = Math.round(diff / 60000);
+
+                    // Check for 24 hours (1440 min) and 1 hour (60 min)
+                    if (diffMinutes === 1440 || diffMinutes === 60) {
+                        new Notification('Напоминание о задаче', {
+                            body: `"${task.title}" начнется через ${diffMinutes === 60 ? '1 час' : '24 часа'}.`,
+                            tag: `task-notify-${task.id}-${diffMinutes}` // Add a tag to prevent duplicate notifications
+                        });
+                    }
+                }
+            });
+        }
+
+        function initializeNotifications() {
+            const notifyButton = document.getElementById('notifyButton');
+            if (!('Notification' in window)) {
+                notifyButton.textContent = 'Уведомления не поддерживаются';
+                notifyButton.disabled = true;
+                return;
+            }
+
+            if (Notification.permission === 'granted') {
+                notifyButton.textContent = 'Уведомления включены';
+                notifyButton.disabled = true;
+                setInterval(checkNotifications, 60000); // Check every minute
+            } else {
+                notifyButton.addEventListener('click', () => {
+                    Notification.requestPermission().then(permission => {
+                        if (permission === 'granted') {
+                            notifyButton.textContent = 'Уведомления включены';
+                            notifyButton.disabled = true;
+                            setInterval(checkNotifications, 60000);
+                            alert('Уведомления успешно включены!');
+                        } else {
+                            alert('Вы не разрешили отправку уведомлений.');
+                        }
+                    });
+                });
+            }
+        }
 
         function generateCalendar() {
             const year = currentDate.getFullYear();
@@ -357,17 +407,6 @@
             return result.trim() || '0 мин';
         }
 
-        function formatDurationLabel(minutes) {
-            const h = Math.floor(minutes / 60);
-            const m = minutes % 60;
-            let result = '';
-            if (h > 0) result += `${h} ч `;
-            if (m > 0) result += `${m} мин`;
-            return result.trim() || '0 мин';
-        }
-
-        
-
         function calculateFreeMinutesForDay(date) {
             const tasksForDay = getTasksForDate(date, true);
             let freeMinutes = 0;
@@ -497,6 +536,7 @@
             document.getElementById('taskRecurring').checked = false;
             document.getElementById('taskModal').style.display = 'flex';
             toggleRecurringOptions();
+            setDefaultDates();
         }
 
         function showAddTaskModal() {
@@ -514,6 +554,7 @@
             document.getElementById('taskRecurring').checked = false; // Сброс чекбокса
             document.getElementById('taskModal').style.display = 'flex';
             toggleRecurringOptions();
+            setDefaultDates();
         }
 
         function editTask(taskId) {
@@ -588,6 +629,14 @@
             }
         }
 
+        function setDefaultDates() {
+            const today = new Date();
+            const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+
+            document.getElementById('startDate').value = formatDate(today);
+            document.getElementById('endDate').value = formatDate(lastDayOfMonth);
+        }
+
         function toggleRecurringOptions() {
             const isRecurring = document.getElementById('taskRecurring').checked;
             const recurringOptions = document.getElementById('recurringOptions');
@@ -622,12 +671,6 @@
         function saveTasks() {
             localStorage.setItem('tasks', JSON.stringify(tasks));
         }
-
-        function saveTasks() {
-            localStorage.setItem('tasks', JSON.stringify(tasks));
-        }
-
-        
 
         document.getElementById('taskForm').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -712,6 +755,7 @@
 
         // Инициализация
         generateCalendar();
+        initializeNotifications();
         
         // Автоматически выбираем текущий день
         const today = new Date();

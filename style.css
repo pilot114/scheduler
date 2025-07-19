@@ -28,10 +28,35 @@
             padding: 20px;
             border-radius: 8px;
             margin-bottom: 20px;
-            text-align: center;
             display: flex;
             justify-content: space-between;
             align-items: center;
+        }
+
+        .header h1 {
+            flex-grow: 1;
+            text-align: center;
+            margin: 0;
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        #notifyButton {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        #notifyButton:hover {
+            background-color: #2980b9;
         }
 
         html.dark-mode .header {
