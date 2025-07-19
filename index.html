@@ -80,6 +80,14 @@
                 <label for="notifyButton-modal">Уведомления</label>
                 <button id="notifyButton-modal">Включить уведомления</button>
             </div>
+            <div class="form-group">
+                <label>Данные</label>
+                <div class="btn-group">
+                    <button id="export-btn">Экспорт</button>
+                    <button id="import-btn">Импорт</button>
+                    <input type="file" id="import-file" style="display: none;" accept=".json">
+                </div>
+            </div>
         </div>
     </div>
 
@@ -190,11 +198,21 @@
         let tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
         let editingTaskId = null;
         let activeSlot = { startTime: 0, duration: 1440 };
-        let settings = JSON.parse(localStorage.getItem('settings')) || {
+        
+        const savedSettings = JSON.parse(localStorage.getItem('settings'));
+        let settings = {
             step: 10,
             theme: 'light-mode',
             notifications: false
         };
+
+        if (savedSettings) {
+            settings.step = savedSettings.step || savedSettings.timeStep || 10;
+            settings.theme = savedSettings.theme || 'light-mode';
+            settings.notifications = savedSettings.notifications || false;
+        }
+        
+        localStorage.setItem('settings', JSON.stringify(settings));
 
         const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 
                           'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
@@ -719,6 +737,7 @@
         function applySettings() {
             document.getElementById('taskTime').step = settings.step;
             document.getElementById('taskDuration').step = settings.step;
+            document.getElementById('taskDuration').min = settings.step;
             if (settings.theme === 'dark-mode') {
                 document.documentElement.classList.add('dark-mode');
             } else {
@@ -813,6 +832,56 @@
             radio.addEventListener('change', saveSettings);
         });
         document.getElementById('theme-toggle-modal').addEventListener('change', saveSettings);
+
+        document.getElementById('export-btn').addEventListener('click', () => {
+            const data = {
+                tasks: tasks,
+                settings: settings
+            };
+            const dataStr = JSON.stringify(data, null, 2);
+            const blob = new Blob([dataStr], {type: "application/json"});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'tasks-backup.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+
+        document.getElementById('import-btn').addEventListener('click', () => {
+            document.getElementById('import-file').click();
+        });
+
+        document.getElementById('import-file').addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (!file) {
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.tasks && data.settings) {
+                        tasks = data.tasks;
+                        settings = data.settings;
+                        saveTasks();
+                        localStorage.setItem('settings', JSON.stringify(settings));
+                        applySettings();
+                        generateCalendar();
+                        if (selectedDate) {
+                            selectDate(selectedDate);
+                        }
+                        alert('Данные успешно импортированы!');
+                    } else {
+                        alert('Неверный формат файла.');
+                    }
+                } catch (error) {
+                    alert('Ошибка при чтении файла.');
+                }
+            };
+            reader.readAsText(file);
+        });
 
         document.getElementById('taskDuration').addEventListener('input', function(e) {
             document.getElementById('durationLabel').textContent = formatDurationLabel(e.target.value);
