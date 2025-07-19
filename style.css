@@ -276,6 +276,7 @@
             margin-bottom: 8px;
             border-radius: 4px;
             border-left: 4px solid #3498db;
+            position: relative;
         }
 
         html.dark-mode .task-item {
@@ -289,6 +290,15 @@
 
         html.dark-mode .task-item.recurring {
             border-left-color: #9b59b6;
+        }
+
+        .task-progress-text {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 14px;
+            font-weight: bold;
+            color: #27ae60;
         }
 
         .task-time {

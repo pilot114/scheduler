@@ -202,6 +202,7 @@
         let tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
         let editingTaskId = null;
         let activeSlot = { startTime: 0, duration: 1440 };
+        let progressUpdateInterval = null;
         
         const savedSettings = JSON.parse(localStorage.getItem('settings'));
         let settings = {
@@ -430,6 +431,17 @@
                 `${day} ${monthNames[month - 1]} ${year}, ${dayNames[date.getDay()]}`;
             
             displayTasksForDay(date);
+
+            if (progressUpdateInterval) {
+                clearInterval(progressUpdateInterval);
+                progressUpdateInterval = null;
+            }
+
+            if (formatDate(date) === formatDate(new Date())) {
+                progressUpdateInterval = setInterval(() => {
+                    displayTasksForDay(date);
+                }, 60000); // Update every minute
+            }
         }
 
         function timeToMinutes(timeString) {
@@ -519,6 +531,20 @@
                 
                 if (task.description) {
                     taskInfo += `<div style="font-size: 14px; color: #7f8c8d; margin-top: 4px;">${task.description}</div>`;
+                }
+
+                const isToday = formatDate(date) === formatDate(new Date());
+                if (isToday && task.type === 'single' && !task.completed) {
+                    const now = new Date();
+                    const nowMinutes = now.getHours() * 60 + now.getMinutes();
+                    const taskStartMinutes = timeToMinutes(task.time);
+                    const taskEndMinutes = taskStartMinutes + parseInt(task.duration);
+
+                    if (nowMinutes >= taskStartMinutes && nowMinutes < taskEndMinutes) {
+                        const elapsed = nowMinutes - taskStartMinutes;
+                        const progress = Math.round((elapsed / parseInt(task.duration)) * 100);
+                        taskInfo += `<div class="task-progress-text">${progress}%</div>`;
+                    }
                 }
                 
                 taskInfo += `
