@@ -60,9 +60,10 @@
 
     <div class="modal" id="settingsModal">
         <div class="modal-content">
-            <h3>Настройки</h3>
+            <h2>Настройки</h2>
+            <br>
             <div class="form-group">
-                <label>Шаг (минуты)</label>
+                <label>Шаг выбора времени (в минутах)</label>
                 <div class="radio-group">
                     <label><input type="radio" name="step" value="5"><span>5</span></label>
                     <label><input type="radio" name="step" value="10" checked><span>10</span></label>
@@ -372,8 +373,8 @@
         }
 
         function isTaskActiveOnDate(task, date) {
-            const startDate = new Date(task.startDate);
-            const endDate = task.endDate ? new Date(task.endDate) : null;
+            const startDate = new Date(task.startDate + 'T00:00:00');
+            const endDate = task.endDate ? new Date(task.endDate + 'T00:00:00') : null;
             
             if (date < startDate || (endDate && date > endDate)) {
                 return false;
@@ -475,7 +476,7 @@
         }
 
         function calculateFreeMinutesForDay(date) {
-            const tasksForDay = getTasksForDate(date, false);
+            const tasksForDay = getTasksForDate(date, true);
             let freeMinutes = 0;
             let currentTime = 0;
 
@@ -496,7 +497,7 @@
         }
 
         function displayTasksForDay(date) {
-            const tasksForDay = getTasksForDate(date, false); // Включаем скрытые задачи
+            const tasksForDay = getTasksForDate(date, true); // Включаем скрытые задачи
             const taskList = document.getElementById('taskList');
             taskList.innerHTML = '';
 
@@ -783,8 +784,8 @@
                         overlappingTasks.push(existingTask);
                     }
                 } else if (task.type === 'recurring' && existingTask.type === 'recurring') {
-                    const start = new Date(Math.max(new Date(task.startDate).getTime(), new Date(existingTask.startDate).getTime()));
-                    const end = new Date(Math.min(new Date(task.endDate || '9999-12-31').getTime(), new Date(existingTask.endDate || '9999-12-31').getTime()));
+                    const start = new Date(Math.max(new Date(task.startDate + 'T00:00:00').getTime(), new Date(existingTask.startDate + 'T00:00:00').getTime()));
+                    const end = new Date(Math.min(new Date((task.endDate || '9999-12-31') + 'T00:00:00').getTime(), new Date((existingTask.endDate || '9999-12-31') + 'T00:00:00').getTime()));
 
                     for (let d = start; d <= end; d.setDate(d.getDate() + 1)) {
                         if (isTaskActiveOnDate(task, d) && isTaskActiveOnDate(existingTask, d) && overlap) {
