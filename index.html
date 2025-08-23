@@ -315,7 +315,7 @@
                         cell.dataset.date = `${year}-${(month + 1).toString().padStart(2, '0')}-${date.toString().padStart(2, '0')}`;
                         cell.onclick = () => selectDate(cell.dataset.date);
                         
-                        const tasksForDay = getTasksForDate(currentDateObj, true);
+                        const tasksForDay = getTasksForDate(currentDateObj, false);
                         const freeMinutes = calculateFreeMinutesForDay(currentDateObj);
                         const freeHours = Math.floor(freeMinutes / 60);
 
@@ -475,7 +475,7 @@
         }
 
         function calculateFreeMinutesForDay(date) {
-            const tasksForDay = getTasksForDate(date, true);
+            const tasksForDay = getTasksForDate(date, false);
             let freeMinutes = 0;
             let currentTime = 0;
 
@@ -496,7 +496,7 @@
         }
 
         function displayTasksForDay(date) {
-            const tasksForDay = getTasksForDate(date, true); // Включаем скрытые задачи
+            const tasksForDay = getTasksForDate(date, false); // Включаем скрытые задачи
             const taskList = document.getElementById('taskList');
             taskList.innerHTML = '';
 
