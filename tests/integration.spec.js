@@ -99,6 +99,7 @@ test.describe('Планировщик - Интеграционные тесты'
     const currentYear = today.getFullYear();
     
     // Создаем задачу на текущую дату
+    const todayStr = today.toISOString().split('T')[0];
     await page.evaluate((dateStr) => {
       const task = {
         id: '1',
@@ -110,15 +111,10 @@ test.describe('Планировщик - Интеграционные тесты'
       };
       window.tasks = [task];
       window.saveTasks();
-      
-      // Обновляем календарь
-      if (window.updateCalendar) {
-        window.updateCalendar();
-      }
-    }, today.toISOString().split('T')[0]);
+    }, todayStr);
     
     // Выбираем текущий день
-    const todayCell = page.locator(`[data-date="${today.toISOString().split('T')[0]}"]`);
+    const todayCell = page.locator(`[data-date="${todayStr}"]`);
     if (await todayCell.count() > 0) {
       await todayCell.click();
       
@@ -173,6 +169,9 @@ test.describe('Планировщик - Интеграционные тесты'
     
     if (await todayCell.count() > 0) {
       await todayCell.click();
+      
+      // Ждем появления задач
+      await page.waitForSelector('.task-item', { timeout: 5000 });
       
       // Проверяем, что повторяющаяся задача отображается
       await expect(page.locator('.task-item.recurring')).toHaveCount(1);
@@ -419,6 +418,9 @@ test.describe('Планировщик - Интеграционные тесты'
     if (await todayCell.count() > 0) {
       await todayCell.click();
       
+      // Ждем появления задач
+      await page.waitForSelector('.task-item', { timeout: 5000 });
+      
       // Проверяем задачу на сегодня
       await expect(page.locator('.task-item')).toHaveCount(1);
       await expect(page.locator('.task-title')).toHaveText('Задача на сегодня');
@@ -427,6 +429,9 @@ test.describe('Планировщик - Интеграционные тесты'
       const tomorrowCell = page.locator(`[data-date="${tomorrow.toISOString().split('T')[0]}"]`);
       if (await tomorrowCell.count() > 0) {
         await tomorrowCell.click();
+        
+        // Ждем появления задач на завтра
+        await page.waitForSelector('.task-item', { timeout: 5000 });
         
         // Проверяем задачу на завтра
         await expect(page.locator('.task-item')).toHaveCount(1);

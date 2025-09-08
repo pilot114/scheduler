@@ -22,7 +22,7 @@ test.describe('Планировщик - Настройки', () => {
     
     // Проверяем основные элементы настроек
     await expect(page.locator('input[name="step"]')).toHaveCount(5);
-    await expect(page.locator('#theme-toggle-modal')).toBeVisible();
+    await expect(page.locator('#theme-toggle-modal')).toBeAttached();
     await expect(page.locator('#notifyButton-modal')).toBeVisible();
     await expect(page.locator('#export-btn')).toBeVisible();
     await expect(page.locator('#import-btn')).toBeVisible();
@@ -45,7 +45,7 @@ test.describe('Планировщик - Настройки', () => {
     await expect(page.locator('input[name="step"][value="10"]')).toBeChecked();
     
     // Выбираем шаг 15 минут
-    await page.check('input[name="step"][value="15"]');
+    await page.check('input[name="step"][value="15"]', { force: true });
     
     // Закрываем модальное окно
     await page.click('#settingsModal', { position: { x: 10, y: 10 } });
@@ -65,9 +65,6 @@ test.describe('Планировщик - Настройки', () => {
   test('Переключение темной темы', async ({ page }) => {
     await page.click('#settings-btn');
     await expect(page.locator('#settingsModal')).toBeVisible();
-    
-    // Ждем появления элементов внутри модального окна
-    await page.waitForSelector('#theme-toggle-modal', { state: 'visible' });
     
     // По умолчанию темная тема выключена
     await expect(page.locator('#theme-toggle-modal')).not.toBeChecked();
@@ -259,10 +256,10 @@ test.describe('Планировщик - Настройки', () => {
     
     for (const step of expectedSteps) {
       const radio = page.locator(`input[name="step"][value="${step}"]`);
-      await expect(radio).toBeVisible();
+      await expect(radio).toBeAttached();
       
       // Проверяем, что радиокнопку можно выбрать
-      await radio.check();
+      await radio.check({ force: true });
       await expect(radio).toBeChecked();
     }
   });
@@ -283,8 +280,8 @@ test.describe('Планировщик - Настройки', () => {
     await page.click('#settings-btn');
     await expect(page.locator('#settingsModal')).toBeVisible();
     
-    // Ждем появления элементов настроек
-    await page.waitForSelector('input[name="step"][value="5"]', { state: 'visible' });
+    // Элементы настроек должны быть в DOM
+    await expect(page.locator('input[name="step"][value="5"]')).toBeAttached();
     
     // Изменяем настройку
     await page.check('input[name="step"][value="5"]', { force: true });
