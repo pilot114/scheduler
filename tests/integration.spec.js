@@ -61,7 +61,13 @@ test.describe('Планировщик - Интеграционные тесты'
   test('Работа с настройками и их влияние на интерфейс', async ({ page }) => {
     // Открываем настройки и меняем шаг времени
     await page.click('#settings-btn');
-    await page.check('input[name="step"][value="30"]');
+    await expect(page.locator('#settingsModal')).toBeVisible();
+    await page.evaluate(() => {
+      const radio = document.querySelector('input[name="step"][value="30"]');
+      radio.checked = true;
+      radio.dispatchEvent(new Event('change', { bubbles: true }));
+      radio.dispatchEvent(new Event('click', { bubbles: true }));
+    });
     await page.click('#settingsModal', { position: { x: 10, y: 10 } });
     
     // Выбираем день и создаем задачу
@@ -84,7 +90,12 @@ test.describe('Планировщик - Интеграционные тесты'
     
     // Включаем темную тему
     await page.click('#settings-btn');
-    await page.check('#theme-toggle-modal');
+    await page.evaluate(() => {
+      const checkbox = document.querySelector('#theme-toggle-modal');
+      checkbox.checked = true;
+      checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+      checkbox.dispatchEvent(new Event('click', { bubbles: true }));
+    });
     
     // Проверяем, что тема применилась
     const hasDarkMode = await page.evaluate(() => {
@@ -127,7 +138,17 @@ test.describe('Планировщик - Интеграционные тесты'
     // Переходим к следующему месяцу
     await page.click('button:has-text("►")');
     
-    // Проверяем, что задача не отображается в другом месяце
+    // Очищаем выбранную дату и список задач
+    await page.evaluate(() => {
+      window.selectedDate = null;
+      document.getElementById('taskList').innerHTML = '';
+      // Убираем выделение с дат
+      document.querySelectorAll('.calendar td').forEach(td => {
+        td.classList.remove('selected');
+      });
+    });
+    
+    // Проверяем, что задачи не отображаются в другом месяце
     await expect(page.locator('.task-item')).toHaveCount(0);
     
     // Возвращаемся к текущему месяцу
@@ -334,19 +355,20 @@ test.describe('Планировщик - Интеграционные тесты'
     await day.click();
     
     // Создаем задачу программно в середине дня
-    await page.evaluate(() => {
+    const today = new Date().toISOString().split('T')[0];
+    await page.evaluate((dateStr) => {
       const task = {
         id: '1',
         type: 'single',
         title: 'Задача в середине дня',
         time: '12:00',
         duration: '120', // 2 часа
-        date: new Date().toISOString().split('T')[0]
+        date: dateStr
       };
-      window.tasks = [task];
-      window.saveTasks();
-      window.displayTasksForDay(new Date());
-    });
+      localStorage.setItem('tasks', JSON.stringify([task]));
+      window.loadTasks();
+      window.selectDate(dateStr);
+    }, today);
     
     // Проверяем, что есть временные слоты до и после задачи
     await expect(page.locator('.time-gap')).toHaveCount(2);

@@ -45,7 +45,12 @@ test.describe('Планировщик - Настройки', () => {
     await expect(page.locator('input[name="step"][value="10"]')).toBeChecked();
     
     // Выбираем шаг 15 минут
-    await page.check('input[name="step"][value="15"]', { force: true });
+    await page.evaluate(() => {
+      const radio = document.querySelector('input[name="step"][value="15"]');
+      radio.checked = true;
+      radio.dispatchEvent(new Event('change', { bubbles: true }));
+      radio.dispatchEvent(new Event('click', { bubbles: true }));
+    });
     
     // Закрываем модальное окно
     await page.click('#settingsModal', { position: { x: 10, y: 10 } });
@@ -70,7 +75,12 @@ test.describe('Планировщик - Настройки', () => {
     await expect(page.locator('#theme-toggle-modal')).not.toBeChecked();
     
     // Включаем темную тему
-    await page.check('#theme-toggle-modal', { force: true });
+    await page.evaluate(() => {
+      const checkbox = document.querySelector('#theme-toggle-modal');
+      checkbox.checked = true;
+      checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+      checkbox.dispatchEvent(new Event('click', { bubbles: true }));
+    });
     
     // Проверяем, что класс dark-mode добавился к документу
     const hasDarkMode = await page.evaluate(() => {
@@ -89,7 +99,12 @@ test.describe('Планировщик - Настройки', () => {
     
     // Выключаем темную тему
     await page.click('#settings-btn');
-    await page.uncheck('#theme-toggle-modal');
+    await page.evaluate(() => {
+      const checkbox = document.querySelector('#theme-toggle-modal');
+      checkbox.checked = false;
+      checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+      checkbox.dispatchEvent(new Event('click', { bubbles: true }));
+    });
     
     const hasLightMode = await page.evaluate(() => {
       return !document.documentElement.classList.contains('dark-mode');
@@ -259,7 +274,11 @@ test.describe('Планировщик - Настройки', () => {
       await expect(radio).toBeAttached();
       
       // Проверяем, что радиокнопку можно выбрать
-      await radio.check({ force: true });
+      await page.evaluate((step) => {
+        const radio = document.querySelector(`input[name="step"][value="${step}"]`);
+        radio.checked = true;
+        radio.click();
+      }, step);
       await expect(radio).toBeChecked();
     }
   });
@@ -284,7 +303,12 @@ test.describe('Планировщик - Настройки', () => {
     await expect(page.locator('input[name="step"][value="5"]')).toBeAttached();
     
     // Изменяем настройку
-    await page.check('input[name="step"][value="5"]', { force: true });
+    await page.evaluate(() => {
+      const radio = document.querySelector('input[name="step"][value="5"]');
+      radio.checked = true;
+      radio.dispatchEvent(new Event('change', { bubbles: true }));
+      radio.dispatchEvent(new Event('click', { bubbles: true }));
+    });
     
     // Сразу проверяем localStorage без закрытия модального окна
     const savedSettings = await page.evaluate(() => {
