@@ -801,6 +801,10 @@
         function saveTasks() {
             localStorage.setItem('tasks', JSON.stringify(tasks));
         }
+        
+        function loadTasks() {
+            tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+        }
 
         function saveSettings() {
             settings.step = parseInt(document.querySelector('input[name="step"]:checked').value);

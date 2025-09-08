@@ -98,48 +98,18 @@ test.describe('Планировщик - Управление задачами', 
         duration: '60',
         date: dateStr
       };
-      window.tasks = [task];
-      window.saveTasks();
-      console.log('Created task:', task);
-      console.log('Tasks array:', window.tasks);
-      console.log('LocalStorage tasks:', localStorage.getItem('tasks'));
+      // Сохраняем напрямую в localStorage и загружаем
+      localStorage.setItem('tasks', JSON.stringify([task]));
+      window.loadTasks();
     }, today);
     
     // Выбираем дату напрямую через функцию selectDate
     await page.evaluate((dateStr) => {
-      console.log('Selecting date:', dateStr);
       window.selectDate(dateStr);
-      
-      // Отладка после выбора даты
-      const date = new Date(dateStr + 'T12:00:00');
-      const tasksForDate = window.getTasksForDate(date, true);
-      console.log('Tasks for date after selectDate:', tasksForDate);
-      console.log('Task list innerHTML:', document.getElementById('taskList').innerHTML);
     }, today);
     
-    // Проверим, что есть в списке задач
-    const taskListContent = await page.locator('#taskList').innerHTML();
-    console.log('Task list content:', taskListContent);
-    
-    // Попробуем найти любые элементы li в списке задач
-    const liElements = await page.locator('#taskList li').count();
-    console.log('Number of li elements:', liElements);
-    
-    // Если задач нет, попробуем создать их еще раз и обновить отображение
-    if (liElements === 0) {
-      await page.evaluate((dateStr) => {
-        const date = new Date(dateStr + 'T12:00:00');
-        console.log('Manually calling displayTasksForDay');
-        window.displayTasksForDay(date);
-      }, today);
-      
-      // Еще раз проверим содержимое
-      const newTaskListContent = await page.locator('#taskList').innerHTML();
-      console.log('Task list content after manual display:', newTaskListContent);
-    }
-    
-    // Ждем появления задачи или любого li элемента
-    await page.waitForSelector('#taskList li', { timeout: 10000 });
+    // Ждем появления задачи
+    await page.waitForSelector('.task-item', { timeout: 5000 });
     
     // Кликаем кнопку редактирования
     await page.click('button:has-text("Редактировать")');
@@ -172,15 +142,14 @@ test.describe('Планировщик - Управление задачами', 
         duration: '60',
         date: dateStr
       };
-      window.tasks = [task];
-      window.saveTasks();
+      localStorage.setItem('tasks', JSON.stringify([task]));
+      window.loadTasks();
     }, today);
     
     // Выбираем дату
-    const todayCell = page.locator(`[data-date="${today}"]`);
-    if (await todayCell.count() > 0) {
-      await todayCell.click();
-    }
+    await page.evaluate((dateStr) => {
+      window.selectDate(dateStr);
+    }, today);
     
     await page.waitForSelector('.task-item');
     
@@ -210,15 +179,14 @@ test.describe('Планировщик - Управление задачами', 
         date: dateStr,
         completed: false
       };
-      window.tasks = [task];
-      window.saveTasks();
+      localStorage.setItem('tasks', JSON.stringify([task]));
+      window.loadTasks();
     }, today);
     
     // Выбираем дату
-    const todayCell = page.locator(`[data-date="${today}"]`);
-    if (await todayCell.count() > 0) {
-      await todayCell.click();
-    }
+    await page.evaluate((dateStr) => {
+      window.selectDate(dateStr);
+    }, today);
     
     await page.waitForSelector('.task-item');
     
@@ -381,15 +349,14 @@ test.describe('Планировщик - Управление задачами', 
         date: dateStr,
         completed: false
       };
-      window.tasks = [task];
-      window.saveTasks();
+      localStorage.setItem('tasks', JSON.stringify([task]));
+      window.loadTasks();
     }, { hour: currentHour, minute: currentMinute, dateStr: today });
     
     // Выбираем дату
-    const todayCell = page.locator(`[data-date="${today}"]`);
-    if (await todayCell.count() > 0) {
-      await todayCell.click();
-    }
+    await page.evaluate((dateStr) => {
+      window.selectDate(dateStr);
+    }, today);
     
     await page.waitForSelector('.task-item');
     
@@ -413,15 +380,14 @@ test.describe('Планировщик - Управление задачами', 
         duration: '60',
         date: dateStr
       };
-      window.tasks = [task];
-      window.saveTasks();
+      localStorage.setItem('tasks', JSON.stringify([task]));
+      window.loadTasks();
     }, today);
     
     // Выбираем дату
-    const todayCell = page.locator(`[data-date="${today}"]`);
-    if (await todayCell.count() > 0) {
-      await todayCell.click();
-    }
+    await page.evaluate((dateStr) => {
+      window.selectDate(dateStr);
+    }, today);
     
     await page.waitForSelector('.task-item');
     
