@@ -11,21 +11,21 @@ module.exports = defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
-  use: {
-    baseURL: 'http://localhost:8080',
-    trace: 'on-first-retry',
-  },
+  
+  projects: [
+    {
+      name: 'scheduler',
+      use: {
+        ...devices['Desktop Chrome'],
+        baseURL: 'http://localhost:8080',
+      },
+      testDir: './tests',
+    },
+  ],
 
   webServer: {
-    command: 'npx http-server . -p 8080 --silent',
+    command: 'npx http-server src -p 8080 --silent',
     port: 8080,
     reuseExistingServer: !process.env.CI,
   },
-
-  projects: [
-    {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
-    },
-  ],
 });
