@@ -556,6 +556,8 @@
             taskList.innerHTML = '';
 
             let currentTime = 0; // Minutes from midnight
+            let freeTimeBeforeTasks = 0; // Free time before first task
+            let isFirstTask = true;
 
             tasksForDay.forEach(task => {
                 const taskStartTime = timeToMinutes(task.time);
@@ -565,25 +567,34 @@
                 if (taskStartTime > currentTime) {
                     const gap = taskStartTime - currentTime;
                     const gapStartTime = currentTime;
-                    const liGap = document.createElement('li');
-                    liGap.className = 'time-gap';
-                    liGap.innerHTML = `
-                        <div class="gap-info">
-                            Свободные часы: ${formatDuration(gap)}
-                        </div>
-                    `;
-                    liGap.onclick = () => showAddTaskModalWithTime(minutesToTime(gapStartTime), gap);
-                    taskList.appendChild(liGap);
+
+                    // If this is the first task, save free time to move it to the end
+                    if (isFirstTask) {
+                        freeTimeBeforeTasks = gap;
+                    } else {
+                        // For gaps between tasks, display them in place
+                        const liGap = document.createElement('li');
+                        liGap.className = 'time-gap';
+                        liGap.innerHTML = `
+                            <div class="gap-info">
+                                Свободные часы: ${formatDuration(gap)}
+                            </div>
+                        `;
+                        liGap.onclick = () => showAddTaskModalWithTime(minutesToTime(gapStartTime), gap);
+                        taskList.appendChild(liGap);
+                    }
                 }
+
+                isFirstTask = false;
 
                 const li = document.createElement('li');
                 li.className = `task-item ${task.type === 'recurring' ? 'recurring' : ''} ${task.completed ? 'completed' : ''}`;
-                
+
                 let taskInfo = `
                     <div class="task-time">${task.time} ${formatDuration(task.duration)}</div>
                     <div class="task-title">${task.title}</div>
                 `;
-                
+
                 if (task.description) {
                     taskInfo += `<div style="font-size: 14px; color: #7f8c8d; margin-top: 4px;">${task.description}</div>`;
                 }
@@ -601,7 +612,7 @@
                         taskInfo += `<div class="task-progress-text">${progress}%</div>`;
                     }
                 }
-                
+
                 taskInfo += `
                     <div class="task-actions">
                         <button onclick="editTask('${task.id}')">Редактировать</button>
@@ -609,7 +620,7 @@
                         ${task.type === 'single' && !task.completed ? `<button class="complete" onclick="completeTask('${task.id}')">Завершить</button>` : ''}
                     </div>
                 `;
-                
+
                 li.innerHTML = taskInfo;
                 taskList.appendChild(li);
 
@@ -617,17 +628,24 @@
             });
 
             // Calculate and display gap after the last task until end of day (23:59)
+            // Combine with free time from before first task
             const endOfDay = 24 * 60; // 23:59 in minutes
-            if (endOfDay > currentTime) {
-                const gap = endOfDay - currentTime;
+            const freeTimeAtEnd = endOfDay > currentTime ? endOfDay - currentTime : 0;
+            const totalFreeTime = freeTimeBeforeTasks + freeTimeAtEnd;
+
+            if (totalFreeTime > 0) {
+                const dailyHoursInMinutes = settings.dailyHours * 60;
+                const netFreeTime = totalFreeTime - dailyHoursInMinutes;
+
                 const liGap = document.createElement('li');
                 liGap.className = 'time-gap';
                 liGap.innerHTML = `
                     <div class="gap-info">
-                        Свободно: ${formatDuration(gap)}
+                        Свободные часы: ${formatDuration(totalFreeTime)}<br>
+                        <small style="opacity: 0.8;">За вычетом ${settings.dailyHours}ч на бытовые дела: ${formatDuration(Math.max(0, netFreeTime))}</small>
                     </div>
                 `;
-                liGap.onclick = () => showAddTaskModalWithTime(minutesToTime(currentTime), gap);
+                liGap.onclick = () => showAddTaskModalWithTime(minutesToTime(currentTime), freeTimeAtEnd);
                 taskList.appendChild(liGap);
             }
         }
@@ -678,85 +696,102 @@
             calendarBody.innerHTML = '';
 
             const today = new Date();
-            let currentMonth = -1;
-            let currentDate = new Date(year, 0, 1);
-            const lastDayOfYear = new Date(year, 11, 31);
 
-            // Начинаем с понедельника первой недели года
-            const firstDayOfWeek = currentDate.getDay();
-            const daysToSubtract = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
-            currentDate.setDate(currentDate.getDate() - daysToSubtract);
+            // Create a grid container for all 12 months
+            const yearGrid = document.createElement('div');
+            yearGrid.className = 'year-grid';
 
-            while (currentDate <= lastDayOfYear || currentDate.getDay() !== 1) {
-                const row = document.createElement('tr');
-                const weekStartDate = new Date(currentDate);
-                const weekMonth = weekStartDate.getMonth();
+            // Generate all 12 months
+            for (let month = 0; month < 12; month++) {
+                const monthContainer = document.createElement('div');
+                monthContainer.className = 'month-container';
 
-                // Добавляем ячейку с месяцем
-                const monthCell = document.createElement('td');
-                monthCell.classList.add('month-label');
+                // Month label (on the side)
+                const monthLabel = document.createElement('div');
+                monthLabel.className = 'month-side-label';
+                monthLabel.textContent = monthNames[month];
+                monthContainer.appendChild(monthLabel);
 
-                // Показываем название месяца только для первой недели месяца или если это первая строка
-                if (weekMonth !== currentMonth || currentMonth === -1) {
-                    monthCell.textContent = monthNames[weekMonth];
-                    currentMonth = weekMonth;
-                } else {
-                    monthCell.textContent = '';
+                // Month grid
+                const monthGrid = document.createElement('div');
+                monthGrid.className = 'month-grid';
+
+                // Get first and last day of the month
+                const firstDay = new Date(year, month, 1);
+                const lastDay = new Date(year, month + 1, 0);
+                const daysInMonth = lastDay.getDate();
+
+                // Get the starting day of week (0 = Sunday, 1 = Monday, etc.)
+                let startingDayOfWeek = firstDay.getDay();
+                // Convert to Monday-based (0 = Monday, 6 = Sunday)
+                startingDayOfWeek = startingDayOfWeek === 0 ? 6 : startingDayOfWeek - 1;
+
+                // Add empty cells for days before the first day of the month
+                for (let i = 0; i < startingDayOfWeek; i++) {
+                    const emptyCell = document.createElement('div');
+                    emptyCell.className = 'month-day empty';
+                    monthGrid.appendChild(emptyCell);
                 }
 
-                row.appendChild(monthCell);
+                // Add all days of the month
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dateObj = new Date(year, month, day);
+                    const dayCell = document.createElement('div');
+                    dayCell.className = 'month-day';
 
-                // Добавляем 7 дней недели
-                for (let i = 0; i < 7; i++) {
-                    const cell = document.createElement('td');
-                    const dateObj = new Date(currentDate);
-                    const dayOfMonth = dateObj.getDate();
-                    const month = dateObj.getMonth();
-
-                    // Проверяем, относится ли день к текущему году
-                    if (dateObj.getFullYear() !== year) {
-                        cell.classList.add('other-month');
-                        cell.innerHTML = `<div class="day-number">${dayOfMonth}</div>`;
-                    } else {
-                        // Проверка на сегодняшний день
-                        if (dateObj.getFullYear() === today.getFullYear() &&
-                            dateObj.getMonth() === today.getMonth() &&
-                            dateObj.getDate() === today.getDate()) {
-                            cell.classList.add('today');
-                        }
-
-                        cell.innerHTML = `<div class="day-number">${dayOfMonth}</div>`;
-
-                        // Расчет свободных часов
-                        const freeMinutes = calculateFreeMinutesForDay(dateObj);
-                        const freeHours = Math.floor(freeMinutes / 60);
-
-                        if (freeHours >= 1) {
-                            const freeHoursDiv = document.createElement('div');
-                            freeHoursDiv.className = 'free-hours';
-                            freeHoursDiv.textContent = `${freeHours}h`;
-                            cell.appendChild(freeHoursDiv);
-                        }
-
-                        // Цветовая индикация
-                        if (freeHours < 2) {
-                            cell.classList.add('low-availability');
-                        } else if (freeHours < 4) {
-                            cell.classList.add('medium-availability');
-                        }
+                    // Check if today
+                    if (dateObj.getFullYear() === today.getFullYear() &&
+                        dateObj.getMonth() === today.getMonth() &&
+                        dateObj.getDate() === today.getDate()) {
+                        dayCell.classList.add('today');
                     }
 
-                    row.appendChild(cell);
-                    currentDate.setDate(currentDate.getDate() + 1);
+                    // Day number
+                    const dayNumber = document.createElement('div');
+                    dayNumber.className = 'day-number';
+                    dayNumber.textContent = day;
+                    dayCell.appendChild(dayNumber);
+
+                    // Calculate free hours
+                    const freeMinutes = calculateFreeMinutesForDay(dateObj);
+                    const freeHours = Math.floor(freeMinutes / 60);
+
+                    if (freeHours >= 1) {
+                        const freeHoursDiv = document.createElement('div');
+                        freeHoursDiv.className = 'free-hours';
+                        freeHoursDiv.textContent = `${freeHours}h`;
+                        dayCell.appendChild(freeHoursDiv);
+                    }
+
+                    // Color indication
+                    if (freeHours < 2) {
+                        dayCell.classList.add('low-availability');
+                    } else if (freeHours < 4) {
+                        dayCell.classList.add('medium-availability');
+                    }
+
+                    // Make clickable
+                    dayCell.onclick = () => {
+                        viewMode = 'month';
+                        currentDate = new Date(dateObj);
+                        updateViewMode();
+                        selectDate(dateObj);
+                    };
+
+                    monthGrid.appendChild(dayCell);
                 }
 
-                calendarBody.appendChild(row);
-
-                // Прерываем, если прошли весь год и дошли до начала новой недели
-                if (currentDate > lastDayOfYear && currentDate.getDay() === 1) {
-                    break;
-                }
+                monthContainer.appendChild(monthGrid);
+                yearGrid.appendChild(monthContainer);
             }
+
+            // Clear the table body and add our custom grid
+            const tr = document.createElement('tr');
+            const td = document.createElement('td');
+            td.colSpan = 7;
+            td.appendChild(yearGrid);
+            tr.appendChild(td);
+            calendarBody.appendChild(tr);
         }
 
         function showAddTaskModalWithTime(time, duration) {
