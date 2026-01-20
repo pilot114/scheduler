@@ -21,6 +21,8 @@
                 <h1>Планировщик</h1>
                 <div class="controls">
                     <button id="installPwaButton" style="display: none;">Установить</button>
+                    <button id="view-mode-btn" class="view-mode-button" title="Переключить режим просмотра">📅</button>
+                    <button id="info-btn" class="info-button" title="Информация">ℹ️</button>
                     <button id="settings-btn" class="settings-button">⚙️</button>
                 </div>
             </div>
@@ -58,6 +60,50 @@
             </div>
     </div>
 
+    <div class="modal" id="infoModal">
+        <div class="modal-content info-modal-content">
+            <h2>Как использовать планировщик</h2>
+            <div class="info-content">
+                <h3>Основные функции</h3>
+                <ul>
+                    <li><strong>Выбор дня:</strong> Кликните на день в календаре, чтобы просмотреть и управлять делами</li>
+                    <li><strong>Добавление дела:</strong> Кликните на свободный промежуток времени в панели дня</li>
+                    <li><strong>Свободные часы:</strong> В календаре показаны свободные часы для каждого дня (зеленым цветом)</li>
+                    <li><strong>Цветовая индикация:</strong>
+                        <ul>
+                            <li>Красный фон - менее 2 свободных часов</li>
+                            <li>Желтый фон - от 2 до 4 свободных часов</li>
+                            <li>Обычный фон - более 4 свободных часов</li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <h3>Режимы просмотра</h3>
+                <ul>
+                    <li><strong>📆 Месяц:</strong> Подробный вид одного месяца с панелью дел дня</li>
+                    <li><strong>📅 Год:</strong> Обзор всего года - 12 месяцев в одном представлении</li>
+                </ul>
+
+                <h3>Типы дел</h3>
+                <ul>
+                    <li><strong>Одиночное дело:</strong> Запланировано на конкретную дату</li>
+                    <li><strong>Периодическое дело:</strong> Повторяется ежедневно, по дням недели или дням месяца</li>
+                </ul>
+
+                <h3>Настройки</h3>
+                <ul>
+                    <li><strong>Шаг времени:</strong> Точность выбора времени (5, 10, 15, 30, 60 минут)</li>
+                    <li><strong>Часы на бытовые дела:</strong> Учитываются при расчете свободного времени</li>
+                    <li><strong>Тёмная тема:</strong> Переключение темной и светлой темы</li>
+                    <li><strong>Экспорт/Импорт:</strong> Сохранение и восстановление данных</li>
+                </ul>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn-primary" onclick="closeInfoModal()">Понятно</button>
+            </div>
+        </div>
+    </div>
+
     <div class="modal" id="settingsModal">
         <div class="modal-content">
             <h2>Настройки</h2>
@@ -70,6 +116,16 @@
                     <label><input type="radio" name="step" value="15"><span>15</span></label>
                     <label><input type="radio" name="step" value="30"><span>30</span></label>
                     <label><input type="radio" name="step" value="60"><span>60</span></label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="dailyHours">Часы на бытовые дела в сутки</label>
+                <div class="radio-group">
+                    <label><input type="radio" name="dailyHours" value="0"><span>0</span></label>
+                    <label><input type="radio" name="dailyHours" value="2"><span>2</span></label>
+                    <label><input type="radio" name="dailyHours" value="4"><span>4</span></label>
+                    <label><input type="radio" name="dailyHours" value="6"><span>6</span></label>
+                    <label><input type="radio" name="dailyHours" value="8" checked><span>8</span></label>
                 </div>
             </div>
             <div class="form-group">
@@ -204,20 +260,23 @@
         let editingTaskId = null;
         let activeSlot = { startTime: 0, duration: 1440 };
         let progressUpdateInterval = null;
+        let viewMode = 'month'; // 'month' or 'year'
         
         const savedSettings = JSON.parse(localStorage.getItem('settings'));
         let settings = {
             step: 10,
             theme: 'light-mode',
-            notifications: false
+            notifications: false,
+            dailyHours: 8
         };
 
         if (savedSettings) {
             settings.step = savedSettings.step || savedSettings.timeStep || 10;
             settings.theme = savedSettings.theme || 'light-mode';
             settings.notifications = savedSettings.notifications || false;
+            settings.dailyHours = savedSettings.dailyHours !== undefined ? savedSettings.dailyHours : 8;
         }
-        
+
         localStorage.setItem('settings', JSON.stringify(settings));
 
         const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 
@@ -493,6 +552,10 @@
                 freeMinutes += endOfDay - currentTime;
             }
 
+            // Вычитаем часы на бытовые дела
+            const dailyHoursInMinutes = settings.dailyHours * 60;
+            freeMinutes = Math.max(0, freeMinutes - dailyHoursInMinutes);
+
             return freeMinutes;
         }
 
@@ -579,14 +642,145 @@
         }
 
         function changeMonth(direction) {
-            currentDate.setMonth(currentDate.getMonth() + direction);
-            generateCalendar();
-            
-            if (selectedDate) {
-                const [year, month] = selectedDate.split('-').map(Number);
-                if (year === currentDate.getFullYear() && month === currentDate.getMonth() + 1) {
+            if (viewMode === 'year') {
+                currentDate.setFullYear(currentDate.getFullYear() + direction);
+                generateYearCalendar();
+            } else {
+                currentDate.setMonth(currentDate.getMonth() + direction);
+                generateCalendar();
+
+                if (selectedDate) {
+                    const [year, month] = selectedDate.split('-').map(Number);
+                    if (year === currentDate.getFullYear() && month === currentDate.getMonth() + 1) {
+                        selectDate(selectedDate);
+                    }
+                }
+            }
+        }
+
+        function toggleViewMode() {
+            viewMode = viewMode === 'month' ? 'year' : 'month';
+            const mainContent = document.querySelector('.main-content');
+            const viewModeBtn = document.getElementById('view-mode-btn');
+
+            if (viewMode === 'year') {
+                mainContent.classList.add('year-view');
+                viewModeBtn.textContent = '📆';
+                viewModeBtn.title = 'Переключить на месяц';
+                generateYearCalendar();
+            } else {
+                mainContent.classList.remove('year-view');
+                viewModeBtn.textContent = '📅';
+                viewModeBtn.title = 'Переключить на год';
+                generateCalendar();
+                if (selectedDate) {
                     selectDate(selectedDate);
                 }
+            }
+        }
+
+        function generateYearCalendar() {
+            const year = currentDate.getFullYear();
+            document.getElementById('currentMonth').textContent = `${year}`;
+
+            const calendarBody = document.getElementById('calendarBody');
+            calendarBody.innerHTML = '';
+
+            const yearContainer = document.createElement('div');
+            yearContainer.className = 'year-calendar';
+
+            for (let month = 0; month < 12; month++) {
+                const monthContainer = document.createElement('div');
+                monthContainer.className = 'year-month';
+
+                const monthTitle = document.createElement('h3');
+                monthTitle.textContent = monthNames[month];
+                monthContainer.appendChild(monthTitle);
+
+                const monthTable = document.createElement('table');
+                monthTable.className = 'calendar';
+
+                const thead = document.createElement('thead');
+                thead.innerHTML = '<tr><th>Пн</th><th>Вт</th><th>Ср</th><th>Чт</th><th>Пт</th><th>Сб</th><th>Вс</th></tr>';
+                monthTable.appendChild(thead);
+
+                const tbody = document.createElement('tbody');
+                monthTable.appendChild(tbody);
+
+                generateMonthGrid(tbody, year, month);
+
+                monthContainer.appendChild(monthTable);
+                yearContainer.appendChild(monthContainer);
+            }
+
+            const cell = document.createElement('td');
+            cell.setAttribute('colspan', '7');
+            cell.style.border = 'none';
+            cell.appendChild(yearContainer);
+
+            const row = document.createElement('tr');
+            row.appendChild(cell);
+            calendarBody.appendChild(row);
+        }
+
+        function generateMonthGrid(tbody, year, month) {
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const daysInPrevMonth = new Date(year, month, 0).getDate();
+
+            let date = 1;
+            let nextMonthDate = 1;
+
+            const adjustedFirstDay = firstDay === 0 ? 6 : firstDay - 1;
+
+            for (let i = 0; i < 6; i++) {
+                const row = document.createElement('tr');
+
+                for (let j = 0; j < 7; j++) {
+                    const cell = document.createElement('td');
+
+                    if (i === 0 && j < adjustedFirstDay) {
+                        const prevDate = daysInPrevMonth - adjustedFirstDay + j + 1;
+                        cell.classList.add('other-month');
+                        cell.innerHTML = `<div class="day-number">${prevDate}</div>`;
+                    } else if (date > daysInMonth) {
+                        cell.classList.add('other-month');
+                        cell.innerHTML = `<div class="day-number">${nextMonthDate}</div>`;
+                        nextMonthDate++;
+                    } else {
+                        const currentDateObj = new Date(year, month, date);
+                        const today = new Date();
+
+                        if (year === today.getFullYear() && month === today.getMonth() && date === today.getDate()) {
+                            cell.classList.add('today');
+                        }
+
+                        cell.innerHTML = `<div class="day-number">${date}</div>`;
+
+                        const freeMinutes = calculateFreeMinutesForDay(currentDateObj);
+                        const freeHours = Math.floor(freeMinutes / 60);
+
+                        if (freeHours >= 1) {
+                            const freeHoursDiv = document.createElement('div');
+                            freeHoursDiv.className = 'free-hours';
+                            freeHoursDiv.textContent = `${freeHours}h`;
+                            cell.appendChild(freeHoursDiv);
+                        }
+
+                        if (freeHours < 2) {
+                            cell.classList.add('low-availability');
+                        } else if (freeHours < 4) {
+                            cell.classList.add('medium-availability');
+                        }
+
+                        date++;
+                    }
+
+                    row.appendChild(cell);
+                }
+
+                tbody.appendChild(row);
+                if (date > daysInMonth) break;
             }
         }
 
@@ -754,6 +948,10 @@
             document.getElementById('settingsModal').style.display = 'none';
         }
 
+        function closeInfoModal() {
+            document.getElementById('infoModal').style.display = 'none';
+        }
+
         function checkOverlap(task) {
             const newStartTime = timeToMinutes(task.time);
             const newEndTime = newStartTime + parseInt(task.duration);
@@ -809,6 +1007,10 @@
         function saveSettings() {
             settings.step = parseInt(document.querySelector('input[name="step"]:checked').value);
             settings.theme = document.getElementById('theme-toggle-modal').checked ? 'dark-mode' : 'light-mode';
+            const dailyHoursRadio = document.querySelector('input[name="dailyHours"]:checked');
+            if (dailyHoursRadio) {
+                settings.dailyHours = parseInt(dailyHoursRadio.value);
+            }
             localStorage.setItem('settings', JSON.stringify(settings));
             applySettings();
         }
@@ -826,6 +1028,10 @@
             const stepRadio = document.querySelector(`input[name="step"][value="${settings.step}"]`);
             if (stepRadio) {
                 stepRadio.checked = true;
+            }
+            const dailyHoursRadio = document.querySelector(`input[name="dailyHours"][value="${settings.dailyHours}"]`);
+            if (dailyHoursRadio) {
+                dailyHoursRadio.checked = true;
             }
         }
 
@@ -905,6 +1111,18 @@
             }
         });
 
+        document.getElementById('infoModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeInfoModal();
+            }
+        });
+
+        document.getElementById('view-mode-btn').addEventListener('click', toggleViewMode);
+
+        document.getElementById('info-btn').addEventListener('click', () => {
+            document.getElementById('infoModal').style.display = 'flex';
+        });
+
         document.getElementById('settings-btn').addEventListener('click', () => {
             document.getElementById('theme-toggle-modal').checked = settings.theme === 'dark-mode';
             const stepRadio = document.querySelector(`input[name="step"][value="${settings.step}"]`);
@@ -916,6 +1134,15 @@
 
         document.querySelectorAll('input[name="step"]').forEach(radio => {
             radio.addEventListener('change', saveSettings);
+        });
+        document.querySelectorAll('input[name="dailyHours"]').forEach(radio => {
+            radio.addEventListener('change', () => {
+                saveSettings();
+                generateCalendar();
+                if (selectedDate) {
+                    selectDate(selectedDate);
+                }
+            });
         });
         document.getElementById('theme-toggle-modal').addEventListener('change', saveSettings);
 

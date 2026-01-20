@@ -298,10 +298,10 @@ test.describe('Планировщик - Настройки', () => {
   test('Сохранение настроек происходит мгновенно', async ({ page }) => {
     await page.click('#settings-btn');
     await expect(page.locator('#settingsModal')).toBeVisible();
-    
+
     // Элементы настроек должны быть в DOM
     await expect(page.locator('input[name="step"][value="5"]')).toBeAttached();
-    
+
     // Изменяем настройку
     await page.evaluate(() => {
       const radio = document.querySelector('input[name="step"][value="5"]');
@@ -309,12 +309,113 @@ test.describe('Планировщик - Настройки', () => {
       radio.dispatchEvent(new Event('change', { bubbles: true }));
       radio.dispatchEvent(new Event('click', { bubbles: true }));
     });
-    
+
     // Сразу проверяем localStorage без закрытия модального окна
     const savedSettings = await page.evaluate(() => {
       return JSON.parse(localStorage.getItem('settings'));
     });
-    
+
     expect(savedSettings.step).toBe(5);
+  });
+
+  test('Изменение настройки часов на бытовые дела', async ({ page }) => {
+    await page.click('#settings-btn');
+    await expect(page.locator('#settingsModal')).toBeVisible();
+
+    // По умолчанию должно быть выбрано 8 часов
+    await expect(page.locator('input[name="dailyHours"][value="8"]')).toBeChecked();
+
+    // Выбираем 4 часа
+    await page.evaluate(() => {
+      const radio = document.querySelector('input[name="dailyHours"][value="4"]');
+      radio.checked = true;
+      radio.dispatchEvent(new Event('change', { bubbles: true }));
+      radio.dispatchEvent(new Event('click', { bubbles: true }));
+    });
+
+    // Проверяем, что настройка сохранилась
+    const savedSettings = await page.evaluate(() => {
+      return JSON.parse(localStorage.getItem('settings'));
+    });
+
+    expect(savedSettings.dailyHours).toBe(4);
+
+    // Закрываем и снова открываем настройки
+    await page.click('#settingsModal', { position: { x: 10, y: 10 } });
+    await page.click('#settings-btn');
+
+    // Проверяем, что выбрано 4 часа
+    await expect(page.locator('input[name="dailyHours"][value="4"]')).toBeChecked();
+  });
+
+  test('Все опции часов на бытовые дела доступны', async ({ page }) => {
+    await page.click('#settings-btn');
+    await expect(page.locator('#settingsModal')).toBeVisible();
+
+    const expectedHours = ['0', '2', '4', '6', '8'];
+
+    for (const hours of expectedHours) {
+      const radio = page.locator(`input[name="dailyHours"][value="${hours}"]`);
+      await expect(radio).toBeAttached();
+
+      // Проверяем, что радиокнопку можно выбрать
+      await page.evaluate((hours) => {
+        const radio = document.querySelector(`input[name="dailyHours"][value="${hours}"]`);
+        radio.checked = true;
+        radio.click();
+      }, hours);
+      await expect(radio).toBeChecked();
+    }
+  });
+
+  test('Настройка часов на бытовые дела влияет на свободные часы', async ({ page }) => {
+    // Устанавливаем 0 часов на бытовые дела
+    await page.click('#settings-btn');
+    await expect(page.locator('#settingsModal')).toBeVisible();
+
+    await page.evaluate(() => {
+      const radio = document.querySelector('input[name="dailyHours"][value="0"]');
+      radio.checked = true;
+      radio.dispatchEvent(new Event('change', { bubbles: true }));
+      radio.dispatchEvent(new Event('click', { bubbles: true }));
+    });
+
+    await page.waitForTimeout(500);
+    await page.click('#settingsModal', { position: { x: 10, y: 10 } });
+
+    // Получаем свободные часы для дня без задач
+    const freeHours0 = await page.evaluate(() => {
+      const today = new Date();
+      const cell = document.querySelector(`[data-date="${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}"]`);
+      const freeHoursDiv = cell ? cell.querySelector('.free-hours') : null;
+      return freeHoursDiv ? freeHoursDiv.textContent : null;
+    });
+
+    // Устанавливаем 8 часов на бытовые дела
+    await page.click('#settings-btn');
+    await page.evaluate(() => {
+      const radio = document.querySelector('input[name="dailyHours"][value="8"]');
+      radio.checked = true;
+      radio.dispatchEvent(new Event('change', { bubbles: true }));
+      radio.dispatchEvent(new Event('click', { bubbles: true }));
+    });
+
+    await page.waitForTimeout(500);
+    await page.click('#settingsModal', { position: { x: 10, y: 10 } });
+
+    // Получаем свободные часы после изменения настройки
+    const freeHours8 = await page.evaluate(() => {
+      const today = new Date();
+      const cell = document.querySelector(`[data-date="${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}"]`);
+      const freeHoursDiv = cell ? cell.querySelector('.free-hours') : null;
+      return freeHoursDiv ? freeHoursDiv.textContent : null;
+    });
+
+    // Проверяем, что разница в свободных часах составляет 8 часов
+    if (freeHours0 && freeHours8) {
+      const hours0 = parseInt(freeHours0.replace('h', ''));
+      const hours8 = parseInt(freeHours8.replace('h', ''));
+      expect(hours0 - hours8).toBe(8);
+    }
   });
 });
