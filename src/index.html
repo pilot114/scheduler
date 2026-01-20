@@ -641,8 +641,7 @@
                 liGap.className = 'time-gap';
                 liGap.innerHTML = `
                     <div class="gap-info">
-                        Свободные часы: ${formatDuration(totalFreeTime)}<br>
-                        <small style="opacity: 0.8;">За вычетом ${settings.dailyHours}ч на бытовые дела: ${formatDuration(Math.max(0, netFreeTime))}</small>
+                        Свободные часы: ${formatDuration(Math.max(0, netFreeTime))}
                     </div>
                 `;
                 liGap.onclick = () => showAddTaskModalWithTime(minutesToTime(currentTime), freeTimeAtEnd);
@@ -696,93 +695,62 @@
             calendarBody.innerHTML = '';
 
             const today = new Date();
+            const currentYearMonth = today.getFullYear() * 12 + today.getMonth();
 
-            // Create a grid container for all 12 months
+            // Load month notes from localStorage
+            let monthNotes = JSON.parse(localStorage.getItem('monthNotes') || '{}');
+
+            // Create a grid container for all 12 months (2 rows x 6 columns)
             const yearGrid = document.createElement('div');
-            yearGrid.className = 'year-grid';
+            yearGrid.className = 'year-grid-new';
 
             // Generate all 12 months
             for (let month = 0; month < 12; month++) {
-                const monthContainer = document.createElement('div');
-                monthContainer.className = 'month-container';
+                const monthYearMonth = year * 12 + month;
+                const isPast = monthYearMonth < currentYearMonth;
+                const isCurrent = monthYearMonth === currentYearMonth;
+                const isFuture = monthYearMonth > currentYearMonth;
 
-                // Month label (on the side)
-                const monthLabel = document.createElement('div');
-                monthLabel.className = 'month-side-label';
-                monthLabel.textContent = monthNames[month];
-                monthContainer.appendChild(monthLabel);
+                const monthBlock = document.createElement('div');
+                monthBlock.className = 'month-block';
+                if (isCurrent) monthBlock.classList.add('current-month');
 
-                // Month grid
-                const monthGrid = document.createElement('div');
-                monthGrid.className = 'month-grid';
+                // Month header
+                const monthHeader = document.createElement('div');
+                monthHeader.className = 'month-block-header';
+                monthHeader.textContent = monthNames[month];
+                monthBlock.appendChild(monthHeader);
 
-                // Get first and last day of the month
-                const firstDay = new Date(year, month, 1);
-                const lastDay = new Date(year, month + 1, 0);
-                const daysInMonth = lastDay.getDate();
+                // Month note area
+                const noteKey = `${year}-${month}`;
+                const noteValue = monthNotes[noteKey] || '';
 
-                // Get the starting day of week (0 = Sunday, 1 = Monday, etc.)
-                let startingDayOfWeek = firstDay.getDay();
-                // Convert to Monday-based (0 = Monday, 6 = Sunday)
-                startingDayOfWeek = startingDayOfWeek === 0 ? 6 : startingDayOfWeek - 1;
+                const noteArea = document.createElement('textarea');
+                noteArea.className = 'month-note';
+                noteArea.placeholder = isPast || isCurrent ? 'История месяца (саммари)...' : 'Планы на месяц...';
+                noteArea.value = noteValue;
+                noteArea.rows = 4;
 
-                // Add empty cells for days before the first day of the month
-                for (let i = 0; i < startingDayOfWeek; i++) {
-                    const emptyCell = document.createElement('div');
-                    emptyCell.className = 'month-day empty';
-                    monthGrid.appendChild(emptyCell);
-                }
+                // Auto-save on input
+                noteArea.addEventListener('input', (e) => {
+                    monthNotes[noteKey] = e.target.value;
+                    localStorage.setItem('monthNotes', JSON.stringify(monthNotes));
+                });
 
-                // Add all days of the month
-                for (let day = 1; day <= daysInMonth; day++) {
-                    const dateObj = new Date(year, month, day);
-                    const dayCell = document.createElement('div');
-                    dayCell.className = 'month-day';
+                monthBlock.appendChild(noteArea);
 
-                    // Check if today
-                    if (dateObj.getFullYear() === today.getFullYear() &&
-                        dateObj.getMonth() === today.getMonth() &&
-                        dateObj.getDate() === today.getDate()) {
-                        dayCell.classList.add('today');
-                    }
+                // Details button
+                const detailsBtn = document.createElement('button');
+                detailsBtn.className = 'month-details-btn';
+                detailsBtn.textContent = 'Подробнее';
+                detailsBtn.onclick = () => {
+                    viewMode = 'month';
+                    currentDate = new Date(year, month, 1);
+                    toggleViewMode();
+                };
+                monthBlock.appendChild(detailsBtn);
 
-                    // Day number
-                    const dayNumber = document.createElement('div');
-                    dayNumber.className = 'day-number';
-                    dayNumber.textContent = day;
-                    dayCell.appendChild(dayNumber);
-
-                    // Calculate free hours
-                    const freeMinutes = calculateFreeMinutesForDay(dateObj);
-                    const freeHours = Math.floor(freeMinutes / 60);
-
-                    if (freeHours >= 1) {
-                        const freeHoursDiv = document.createElement('div');
-                        freeHoursDiv.className = 'free-hours';
-                        freeHoursDiv.textContent = `${freeHours}h`;
-                        dayCell.appendChild(freeHoursDiv);
-                    }
-
-                    // Color indication
-                    if (freeHours < 2) {
-                        dayCell.classList.add('low-availability');
-                    } else if (freeHours < 4) {
-                        dayCell.classList.add('medium-availability');
-                    }
-
-                    // Make clickable
-                    dayCell.onclick = () => {
-                        viewMode = 'month';
-                        currentDate = new Date(dateObj);
-                        updateViewMode();
-                        selectDate(dateObj);
-                    };
-
-                    monthGrid.appendChild(dayCell);
-                }
-
-                monthContainer.appendChild(monthGrid);
-                yearGrid.appendChild(monthContainer);
+                yearGrid.appendChild(monthBlock);
             }
 
             // Clear the table body and add our custom grid
