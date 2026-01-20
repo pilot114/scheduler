@@ -704,6 +704,25 @@
             right: 1px;
         }
 
+        .month-label {
+            font-weight: bold;
+            background: #34495e !important;
+            color: white !important;
+            text-align: center;
+            vertical-align: middle;
+            min-width: 80px;
+            cursor: default !important;
+        }
+
+        html.dark-mode .month-label {
+            background: #3c4043 !important;
+        }
+
+        .main-content.year-view .month-label {
+            font-size: 11px;
+            padding: 4px;
+        }
+
         /* Info modal */
         .info-modal-content {
             max-width: 600px;
@@ -737,4 +756,48 @@
 
         .info-content ul ul {
             margin-top: 5px;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 12px;
+            height: 12px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+            border: 2px solid #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        html.dark-mode ::-webkit-scrollbar-track {
+            background: #2a2a2a;
+        }
+
+        html.dark-mode ::-webkit-scrollbar-thumb {
+            background: #555;
+            border-color: #2a2a2a;
+        }
+
+        html.dark-mode ::-webkit-scrollbar-thumb:hover {
+            background: #777;
+        }
+
+        /* Firefox scrollbar */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: #888 #f1f1f1;
+        }
+
+        html.dark-mode * {
+            scrollbar-color: #555 #2a2a2a;
         }
