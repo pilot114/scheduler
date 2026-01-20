@@ -723,6 +723,141 @@
             padding: 4px;
         }
 
+        /* Year grid layout */
+        .year-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            padding: 10px;
+            width: 100%;
+        }
+
+        .month-container {
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .month-side-label {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            font-weight: bold;
+            background: #34495e;
+            color: white;
+            padding: 8px 4px;
+            border-radius: 4px;
+            font-size: 12px;
+            text-align: center;
+            min-height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        html.dark-mode .month-side-label {
+            background: #3c4043;
+        }
+
+        .month-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+            flex: 1;
+        }
+
+        .month-day {
+            aspect-ratio: 1;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 4px;
+            cursor: pointer;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            font-size: 10px;
+            transition: all 0.2s;
+        }
+
+        .month-day:hover {
+            background: #e8f4f8;
+            transform: scale(1.05);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .month-day.empty {
+            border: none;
+            background: transparent;
+            cursor: default;
+        }
+
+        .month-day.today {
+            background: #3498db;
+            color: white;
+            font-weight: bold;
+        }
+
+        .month-day.today:hover {
+            background: #2980b9;
+        }
+
+        .month-day .day-number {
+            font-size: 10px;
+            font-weight: 500;
+        }
+
+        .month-day .free-hours {
+            font-size: 7px;
+            margin-top: 2px;
+            opacity: 0.8;
+        }
+
+        .month-day.low-availability {
+            background: #ffebee;
+        }
+
+        .month-day.medium-availability {
+            background: #fff3e0;
+        }
+
+        html.dark-mode .month-day {
+            background: #2c2c2c;
+            border-color: #444;
+            color: #f1f1f1;
+        }
+
+        html.dark-mode .month-day:hover {
+            background: #3a3a3a;
+        }
+
+        html.dark-mode .month-day.today {
+            background: #2980b9;
+        }
+
+        html.dark-mode .month-day.low-availability {
+            background: #4a2c2c;
+        }
+
+        html.dark-mode .month-day.medium-availability {
+            background: #4a3c2c;
+        }
+
+        /* Responsive layout for year view */
+        @media (max-width: 1200px) {
+            .year-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .year-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
         /* Info modal */
         .info-modal-content {
             max-width: 600px;
