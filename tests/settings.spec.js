@@ -323,48 +323,51 @@ test.describe('Планировщик - Настройки', () => {
     await expect(page.locator('#settingsModal')).toBeVisible();
 
     // По умолчанию должно быть выбрано 8 часов
-    await expect(page.locator('input[name="dailyHours"][value="8"]')).toBeChecked();
+    const slider = page.locator('#dailyHours');
+    await expect(slider).toHaveValue('8');
+    await expect(page.locator('#dailyHoursLabel')).toHaveText('8');
 
-    // Выбираем 4 часа
-    await page.evaluate(() => {
-      const radio = document.querySelector('input[name="dailyHours"][value="4"]');
-      radio.checked = true;
-      radio.dispatchEvent(new Event('change', { bubbles: true }));
-      radio.dispatchEvent(new Event('click', { bubbles: true }));
-    });
+    // Устанавливаем 12 часов
+    await slider.fill('12');
+    await slider.dispatchEvent('change');
+
+    // Проверяем, что лейбл обновился
+    await expect(page.locator('#dailyHoursLabel')).toHaveText('12');
 
     // Проверяем, что настройка сохранилась
     const savedSettings = await page.evaluate(() => {
       return JSON.parse(localStorage.getItem('settings'));
     });
 
-    expect(savedSettings.dailyHours).toBe(4);
+    expect(savedSettings.dailyHours).toBe(12);
 
     // Закрываем и снова открываем настройки
     await page.click('#settingsModal', { position: { x: 10, y: 10 } });
     await page.click('#settings-btn');
 
-    // Проверяем, что выбрано 4 часа
-    await expect(page.locator('input[name="dailyHours"][value="4"]')).toBeChecked();
+    // Проверяем, что выбрано 12 часов
+    await expect(slider).toHaveValue('12');
+    await expect(page.locator('#dailyHoursLabel')).toHaveText('12');
   });
 
-  test('Все опции часов на бытовые дела доступны', async ({ page }) => {
+  test('Слайдер часов на бытовые дела работает корректно', async ({ page }) => {
     await page.click('#settings-btn');
     await expect(page.locator('#settingsModal')).toBeVisible();
 
-    const expectedHours = ['0', '2', '4', '6', '8'];
+    const slider = page.locator('#dailyHours');
 
-    for (const hours of expectedHours) {
-      const radio = page.locator(`input[name="dailyHours"][value="${hours}"]`);
-      await expect(radio).toBeAttached();
+    // Проверяем атрибуты слайдера
+    await expect(slider).toHaveAttribute('min', '0');
+    await expect(slider).toHaveAttribute('max', '24');
+    await expect(slider).toHaveAttribute('step', '1');
 
-      // Проверяем, что радиокнопку можно выбрать
-      await page.evaluate((hours) => {
-        const radio = document.querySelector(`input[name="dailyHours"][value="${hours}"]`);
-        radio.checked = true;
-        radio.click();
-      }, hours);
-      await expect(radio).toBeChecked();
+    // Тестируем несколько значений
+    const testValues = ['0', '6', '12', '18', '24'];
+
+    for (const value of testValues) {
+      await slider.fill(value);
+      await expect(slider).toHaveValue(value);
+      await expect(page.locator('#dailyHoursLabel')).toHaveText(value);
     }
   });
 
@@ -373,12 +376,9 @@ test.describe('Планировщик - Настройки', () => {
     await page.click('#settings-btn');
     await expect(page.locator('#settingsModal')).toBeVisible();
 
-    await page.evaluate(() => {
-      const radio = document.querySelector('input[name="dailyHours"][value="0"]');
-      radio.checked = true;
-      radio.dispatchEvent(new Event('change', { bubbles: true }));
-      radio.dispatchEvent(new Event('click', { bubbles: true }));
-    });
+    const slider = page.locator('#dailyHours');
+    await slider.fill('0');
+    await slider.dispatchEvent('change');
 
     await page.waitForTimeout(500);
     await page.click('#settingsModal', { position: { x: 10, y: 10 } });
@@ -393,12 +393,8 @@ test.describe('Планировщик - Настройки', () => {
 
     // Устанавливаем 8 часов на бытовые дела
     await page.click('#settings-btn');
-    await page.evaluate(() => {
-      const radio = document.querySelector('input[name="dailyHours"][value="8"]');
-      radio.checked = true;
-      radio.dispatchEvent(new Event('change', { bubbles: true }));
-      radio.dispatchEvent(new Event('click', { bubbles: true }));
-    });
+    await slider.fill('8');
+    await slider.dispatchEvent('change');
 
     await page.waitForTimeout(500);
     await page.click('#settingsModal', { position: { x: 10, y: 10 } });

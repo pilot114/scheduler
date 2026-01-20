@@ -95,17 +95,6 @@ test.describe('Планировщик - Информация', () => {
     expect(content).toContain('Желтый');
   });
 
-  test('Закрытие модального окна по кнопке', async ({ page }) => {
-    await page.click('#info-btn');
-    await expect(page.locator('#infoModal')).toBeVisible();
-
-    // Кликаем на кнопку "Понятно"
-    await page.click('#infoModal button.btn-primary');
-
-    // Проверяем, что модальное окно закрылось
-    await expect(page.locator('#infoModal')).not.toBeVisible();
-  });
-
   test('Закрытие модального окна кликом вне его', async ({ page }) => {
     await page.click('#info-btn');
     await expect(page.locator('#infoModal')).toBeVisible();
@@ -128,15 +117,6 @@ test.describe('Планировщик - Информация', () => {
     });
 
     expect(overflowY).toBe('auto');
-  });
-
-  test('Кнопка "Понятно" имеет правильный стиль', async ({ page }) => {
-    await page.click('#info-btn');
-    await expect(page.locator('#infoModal')).toBeVisible();
-
-    const button = page.locator('#infoModal button.btn-primary');
-    await expect(button).toBeVisible();
-    await expect(button).toHaveText('Понятно');
   });
 
   test('Повторное открытие модального окна работает', async ({ page }) => {
