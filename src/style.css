@@ -688,58 +688,20 @@
         }
 
         /* Year view calendar */
-        .year-calendar {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            padding: 20px 0;
-        }
-
-        .year-month {
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        html.dark-mode .year-month {
-            background: #2a2a2a;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
-        }
-
-        .year-month h3 {
-            text-align: center;
-            margin-bottom: 10px;
-            font-size: 16px;
-            color: #2c3e50;
-        }
-
-        html.dark-mode .year-month h3 {
-            color: #f1f1f1;
-        }
-
-        .year-month .calendar {
-            font-size: 12px;
-        }
-
-        .year-month .calendar th,
-        .year-month .calendar td {
+        .main-content.year-view .calendar td {
             padding: 4px;
-            height: 35px;
-        }
-
-        .year-month .day-number {
+            height: 40px;
             font-size: 11px;
         }
 
-        .year-month .free-hours {
-            font-size: 9px;
-            bottom: 2px;
-            right: 2px;
+        .main-content.year-view .day-number {
+            font-size: 10px;
         }
 
-        .year-month .calendar-task {
-            display: none;
+        .main-content.year-view .free-hours {
+            font-size: 8px;
+            bottom: 1px;
+            right: 1px;
         }
 
         /* Info modal */

@@ -98,9 +98,6 @@
                     <li><strong>Экспорт/Импорт:</strong> Сохранение и восстановление данных</li>
                 </ul>
             </div>
-            <div class="form-actions">
-                <button type="button" class="btn-primary" onclick="closeInfoModal()">Понятно</button>
-            </div>
         </div>
     </div>
 
@@ -119,14 +116,8 @@
                 </div>
             </div>
             <div class="form-group">
-                <label for="dailyHours">Часы на бытовые дела в сутки</label>
-                <div class="radio-group">
-                    <label><input type="radio" name="dailyHours" value="0"><span>0</span></label>
-                    <label><input type="radio" name="dailyHours" value="2"><span>2</span></label>
-                    <label><input type="radio" name="dailyHours" value="4"><span>4</span></label>
-                    <label><input type="radio" name="dailyHours" value="6"><span>6</span></label>
-                    <label><input type="radio" name="dailyHours" value="8" checked><span>8</span></label>
-                </div>
+                <label for="dailyHours">Часы на бытовые дела в сутки: <span id="dailyHoursLabel">8</span></label>
+                <input type="range" id="dailyHours" min="0" max="24" step="1" value="8" style="width: 100%;">
             </div>
             <div class="form-group">
                 <label for="theme-toggle-modal">Тёмная тема</label>
@@ -686,101 +677,54 @@
             const calendarBody = document.getElementById('calendarBody');
             calendarBody.innerHTML = '';
 
-            const yearContainer = document.createElement('div');
-            yearContainer.className = 'year-calendar';
+            const daysInYear = (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0) ? 366 : 365;
+            const daysPerRow = 14;
+            let currentDay = new Date(year, 0, 1);
+            const today = new Date();
 
-            for (let month = 0; month < 12; month++) {
-                const monthContainer = document.createElement('div');
-                monthContainer.className = 'year-month';
-
-                const monthTitle = document.createElement('h3');
-                monthTitle.textContent = monthNames[month];
-                monthContainer.appendChild(monthTitle);
-
-                const monthTable = document.createElement('table');
-                monthTable.className = 'calendar';
-
-                const thead = document.createElement('thead');
-                thead.innerHTML = '<tr><th>Пн</th><th>Вт</th><th>Ср</th><th>Чт</th><th>Пт</th><th>Сб</th><th>Вс</th></tr>';
-                monthTable.appendChild(thead);
-
-                const tbody = document.createElement('tbody');
-                monthTable.appendChild(tbody);
-
-                generateMonthGrid(tbody, year, month);
-
-                monthContainer.appendChild(monthTable);
-                yearContainer.appendChild(monthContainer);
-            }
-
-            const cell = document.createElement('td');
-            cell.setAttribute('colspan', '7');
-            cell.style.border = 'none';
-            cell.appendChild(yearContainer);
-
-            const row = document.createElement('tr');
-            row.appendChild(cell);
-            calendarBody.appendChild(row);
-        }
-
-        function generateMonthGrid(tbody, year, month) {
-            const firstDay = new Date(year, month, 1).getDay();
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
-            const daysInPrevMonth = new Date(year, month, 0).getDate();
-
-            let date = 1;
-            let nextMonthDate = 1;
-
-            const adjustedFirstDay = firstDay === 0 ? 6 : firstDay - 1;
-
-            for (let i = 0; i < 6; i++) {
+            for (let dayNum = 0; dayNum < daysInYear; dayNum += daysPerRow) {
                 const row = document.createElement('tr');
 
-                for (let j = 0; j < 7; j++) {
+                for (let i = 0; i < daysPerRow && (dayNum + i) < daysInYear; i++) {
+                    const dateObj = new Date(year, 0, dayNum + i + 1);
                     const cell = document.createElement('td');
 
-                    if (i === 0 && j < adjustedFirstDay) {
-                        const prevDate = daysInPrevMonth - adjustedFirstDay + j + 1;
-                        cell.classList.add('other-month');
-                        cell.innerHTML = `<div class="day-number">${prevDate}</div>`;
-                    } else if (date > daysInMonth) {
-                        cell.classList.add('other-month');
-                        cell.innerHTML = `<div class="day-number">${nextMonthDate}</div>`;
-                        nextMonthDate++;
-                    } else {
-                        const currentDateObj = new Date(year, month, date);
-                        const today = new Date();
+                    const dayOfMonth = dateObj.getDate();
+                    const month = dateObj.getMonth();
 
-                        if (year === today.getFullYear() && month === today.getMonth() && date === today.getDate()) {
-                            cell.classList.add('today');
-                        }
+                    // Проверка на сегодняшний день
+                    if (dateObj.getFullYear() === today.getFullYear() &&
+                        dateObj.getMonth() === today.getMonth() &&
+                        dateObj.getDate() === today.getDate()) {
+                        cell.classList.add('today');
+                    }
 
-                        cell.innerHTML = `<div class="day-number">${date}</div>`;
+                    // День и месяц
+                    const dayLabel = dayOfMonth === 1 ? `${dayOfMonth} ${monthNames[month].substring(0, 3)}` : dayOfMonth;
+                    cell.innerHTML = `<div class="day-number">${dayLabel}</div>`;
 
-                        const freeMinutes = calculateFreeMinutesForDay(currentDateObj);
-                        const freeHours = Math.floor(freeMinutes / 60);
+                    // Расчет свободных часов
+                    const freeMinutes = calculateFreeMinutesForDay(dateObj);
+                    const freeHours = Math.floor(freeMinutes / 60);
 
-                        if (freeHours >= 1) {
-                            const freeHoursDiv = document.createElement('div');
-                            freeHoursDiv.className = 'free-hours';
-                            freeHoursDiv.textContent = `${freeHours}h`;
-                            cell.appendChild(freeHoursDiv);
-                        }
+                    if (freeHours >= 1) {
+                        const freeHoursDiv = document.createElement('div');
+                        freeHoursDiv.className = 'free-hours';
+                        freeHoursDiv.textContent = `${freeHours}h`;
+                        cell.appendChild(freeHoursDiv);
+                    }
 
-                        if (freeHours < 2) {
-                            cell.classList.add('low-availability');
-                        } else if (freeHours < 4) {
-                            cell.classList.add('medium-availability');
-                        }
-
-                        date++;
+                    // Цветовая индикация
+                    if (freeHours < 2) {
+                        cell.classList.add('low-availability');
+                    } else if (freeHours < 4) {
+                        cell.classList.add('medium-availability');
                     }
 
                     row.appendChild(cell);
                 }
 
-                tbody.appendChild(row);
-                if (date > daysInMonth) break;
+                calendarBody.appendChild(row);
             }
         }
 
@@ -1007,10 +951,7 @@
         function saveSettings() {
             settings.step = parseInt(document.querySelector('input[name="step"]:checked').value);
             settings.theme = document.getElementById('theme-toggle-modal').checked ? 'dark-mode' : 'light-mode';
-            const dailyHoursRadio = document.querySelector('input[name="dailyHours"]:checked');
-            if (dailyHoursRadio) {
-                settings.dailyHours = parseInt(dailyHoursRadio.value);
-            }
+            settings.dailyHours = parseInt(document.getElementById('dailyHours').value);
             localStorage.setItem('settings', JSON.stringify(settings));
             applySettings();
         }
@@ -1029,10 +970,8 @@
             if (stepRadio) {
                 stepRadio.checked = true;
             }
-            const dailyHoursRadio = document.querySelector(`input[name="dailyHours"][value="${settings.dailyHours}"]`);
-            if (dailyHoursRadio) {
-                dailyHoursRadio.checked = true;
-            }
+            document.getElementById('dailyHours').value = settings.dailyHours;
+            document.getElementById('dailyHoursLabel').textContent = settings.dailyHours;
         }
 
         document.getElementById('taskForm').addEventListener('submit', function(e) {
@@ -1135,15 +1074,23 @@
         document.querySelectorAll('input[name="step"]').forEach(radio => {
             radio.addEventListener('change', saveSettings);
         });
-        document.querySelectorAll('input[name="dailyHours"]').forEach(radio => {
-            radio.addEventListener('change', () => {
-                saveSettings();
+
+        document.getElementById('dailyHours').addEventListener('input', function(e) {
+            document.getElementById('dailyHoursLabel').textContent = e.target.value;
+        });
+
+        document.getElementById('dailyHours').addEventListener('change', () => {
+            saveSettings();
+            if (viewMode === 'year') {
+                generateYearCalendar();
+            } else {
                 generateCalendar();
                 if (selectedDate) {
                     selectDate(selectedDate);
                 }
-            });
+            }
         });
+
         document.getElementById('theme-toggle-modal').addEventListener('change', saveSettings);
 
         document.getElementById('export-btn').addEventListener('click', () => {

@@ -61,32 +61,30 @@ test.describe('Планировщик - Режим просмотра года',
     expect(buttonText).toBe('📅');
   });
 
-  test('Годовой календарь показывает 12 месяцев', async ({ page }) => {
+  test('Годовой календарь показывает все дни года', async ({ page }) => {
     await page.click('#view-mode-btn');
     await page.waitForTimeout(300);
 
-    // Проверяем наличие контейнера с годовым календарем
-    const yearCalendar = page.locator('.year-calendar');
-    await expect(yearCalendar).toBeVisible();
+    // Проверяем, что есть строки с днями
+    const rows = page.locator('#calendarBody tr');
+    const rowCount = await rows.count();
 
-    // Проверяем, что есть 12 месячных блоков
-    const monthBlocks = page.locator('.year-month');
-    await expect(monthBlocks).toHaveCount(12);
+    // Для 365 дней с 14 днями в строке должно быть примерно 27 строк (365/14 ≈ 26.07)
+    expect(rowCount).toBeGreaterThanOrEqual(26);
+    expect(rowCount).toBeLessThanOrEqual(28); // На случай високосного года
   });
 
-  test('Каждый месяц в годовом календаре имеет заголовок', async ({ page }) => {
+  test('Дни года отображаются с индикаторами месяцев', async ({ page }) => {
     await page.click('#view-mode-btn');
     await page.waitForTimeout(300);
 
-    const monthNames = [
-      'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
-      'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'
-    ];
+    // Проверяем, что первые дни месяцев имеют метки с названием месяца
+    const dayNumbers = page.locator('.day-number');
+    const firstDayNumbers = await dayNumbers.allTextContents();
 
-    for (const monthName of monthNames) {
-      const monthTitle = page.locator(`.year-month h3:has-text("${monthName}")`);
-      await expect(monthTitle).toBeVisible();
-    }
+    // Проверяем, что есть метки месяцев (например, "1 Янв", "1 Фев", и т.д.)
+    const hasMonthLabels = firstDayNumbers.some(text => /\d+\s+[А-Я][а-я]{2}/.test(text));
+    expect(hasMonthLabels).toBe(true);
   });
 
   test('Годовой календарь показывает свободные часы', async ({ page }) => {
@@ -94,11 +92,11 @@ test.describe('Планировщик - Режим просмотра года',
     await page.waitForTimeout(300);
 
     // Проверяем наличие индикаторов свободных часов
-    const freeHoursElements = page.locator('.year-month .free-hours');
+    const freeHoursElements = page.locator('.free-hours');
     const count = await freeHoursElements.count();
 
-    // Должно быть много дней со свободными часами
-    expect(count).toBeGreaterThan(0);
+    // Должно быть много дней со свободными часами (почти все дни года)
+    expect(count).toBeGreaterThan(300);
   });
 
   test('Навигация по годам работает в режиме года', async ({ page }) => {
