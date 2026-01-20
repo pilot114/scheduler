@@ -746,7 +746,15 @@
                 detailsBtn.onclick = () => {
                     viewMode = 'month';
                     currentDate = new Date(year, month, 1);
-                    toggleViewMode();
+                    const mainContent = document.querySelector('.main-content');
+                    const viewModeBtn = document.getElementById('view-mode-btn');
+                    mainContent.classList.remove('year-view');
+                    viewModeBtn.textContent = '📅';
+                    viewModeBtn.title = 'Переключить на год';
+                    generateCalendar();
+                    // Select first day of the month
+                    const firstDay = formatDate(new Date(year, month, 1));
+                    selectDate(firstDay);
                 };
                 monthBlock.appendChild(detailsBtn);
 

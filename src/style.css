@@ -98,6 +98,10 @@
             display: none;
         }
 
+        .main-content.year-view .calendar thead {
+            display: none;
+        }
+
         .calendar-section {
             background: white;
             padding: 20px;
