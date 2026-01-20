@@ -944,7 +944,7 @@
         /* New Year View (2x6 grid) */
         .year-grid-new {
             display: grid;
-            grid-template-columns: repeat(6, 1fr);
+            grid-template-columns: repeat(2, 1fr);
             gap: 20px;
             padding: 20px;
             width: 100%;
@@ -1037,25 +1037,7 @@
         }
 
         /* Responsive layout for new year view */
-        @media (max-width: 1400px) {
-            .year-grid-new {
-                grid-template-columns: repeat(4, 1fr);
-            }
-        }
-
-        @media (max-width: 1000px) {
-            .year-grid-new {
-                grid-template-columns: repeat(3, 1fr);
-            }
-        }
-
         @media (max-width: 768px) {
-            .year-grid-new {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media (max-width: 500px) {
             .year-grid-new {
                 grid-template-columns: 1fr;
             }
