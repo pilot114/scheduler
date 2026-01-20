@@ -90,6 +90,14 @@
             gap: 20px;
         }
 
+        .main-content.year-view {
+            grid-template-columns: 1fr;
+        }
+
+        .main-content.year-view .day-panel {
+            display: none;
+        }
+
         .calendar-section {
             background: white;
             padding: 20px;
@@ -589,7 +597,7 @@
             border-radius: 50%;
         }
 
-        .settings-button {
+        .settings-button, .view-mode-button, .info-button {
             background: none;
             border: none;
             color: white;
@@ -597,6 +605,10 @@
             font-size: 24px;
             padding: 0 10px;
             line-height: 1;
+        }
+
+        .view-mode-button:hover, .settings-button:hover, .info-button:hover {
+            opacity: 0.8;
         }
 
         .radio-group {
@@ -673,4 +685,94 @@
             background: #333;
             border-color: #555;
             color: #f1f1f1;
+        }
+
+        /* Year view calendar */
+        .year-calendar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            padding: 20px 0;
+        }
+
+        .year-month {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        html.dark-mode .year-month {
+            background: #2a2a2a;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .year-month h3 {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 16px;
+            color: #2c3e50;
+        }
+
+        html.dark-mode .year-month h3 {
+            color: #f1f1f1;
+        }
+
+        .year-month .calendar {
+            font-size: 12px;
+        }
+
+        .year-month .calendar th,
+        .year-month .calendar td {
+            padding: 4px;
+            height: 35px;
+        }
+
+        .year-month .day-number {
+            font-size: 11px;
+        }
+
+        .year-month .free-hours {
+            font-size: 9px;
+            bottom: 2px;
+            right: 2px;
+        }
+
+        .year-month .calendar-task {
+            display: none;
+        }
+
+        /* Info modal */
+        .info-modal-content {
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .info-content {
+            text-align: left;
+            line-height: 1.6;
+        }
+
+        .info-content h3 {
+            color: #2c3e50;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        html.dark-mode .info-content h3 {
+            color: #f1f1f1;
+        }
+
+        .info-content ul {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+
+        .info-content li {
+            margin-bottom: 8px;
+        }
+
+        .info-content ul ul {
+            margin-top: 5px;
         }
