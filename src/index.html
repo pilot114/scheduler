@@ -569,7 +569,7 @@
                     liGap.className = 'time-gap';
                     liGap.innerHTML = `
                         <div class="gap-info">
-                            Свободно: ${formatDuration(gap)}
+                            Свободные часы: ${formatDuration(gap)}
                         </div>
                     `;
                     liGap.onclick = () => showAddTaskModalWithTime(minutesToTime(gapStartTime), gap);
@@ -677,54 +677,85 @@
             const calendarBody = document.getElementById('calendarBody');
             calendarBody.innerHTML = '';
 
-            const daysInYear = (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0) ? 366 : 365;
-            const daysPerRow = 14;
-            let currentDay = new Date(year, 0, 1);
             const today = new Date();
+            let currentMonth = -1;
+            let currentDate = new Date(year, 0, 1);
+            const lastDayOfYear = new Date(year, 11, 31);
 
-            for (let dayNum = 0; dayNum < daysInYear; dayNum += daysPerRow) {
+            // Начинаем с понедельника первой недели года
+            const firstDayOfWeek = currentDate.getDay();
+            const daysToSubtract = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
+            currentDate.setDate(currentDate.getDate() - daysToSubtract);
+
+            while (currentDate <= lastDayOfYear || currentDate.getDay() !== 1) {
                 const row = document.createElement('tr');
+                const weekStartDate = new Date(currentDate);
+                const weekMonth = weekStartDate.getMonth();
 
-                for (let i = 0; i < daysPerRow && (dayNum + i) < daysInYear; i++) {
-                    const dateObj = new Date(year, 0, dayNum + i + 1);
+                // Добавляем ячейку с месяцем
+                const monthCell = document.createElement('td');
+                monthCell.classList.add('month-label');
+
+                // Показываем название месяца только для первой недели месяца или если это первая строка
+                if (weekMonth !== currentMonth || currentMonth === -1) {
+                    monthCell.textContent = monthNames[weekMonth];
+                    currentMonth = weekMonth;
+                } else {
+                    monthCell.textContent = '';
+                }
+
+                row.appendChild(monthCell);
+
+                // Добавляем 7 дней недели
+                for (let i = 0; i < 7; i++) {
                     const cell = document.createElement('td');
-
+                    const dateObj = new Date(currentDate);
                     const dayOfMonth = dateObj.getDate();
                     const month = dateObj.getMonth();
 
-                    // Проверка на сегодняшний день
-                    if (dateObj.getFullYear() === today.getFullYear() &&
-                        dateObj.getMonth() === today.getMonth() &&
-                        dateObj.getDate() === today.getDate()) {
-                        cell.classList.add('today');
-                    }
+                    // Проверяем, относится ли день к текущему году
+                    if (dateObj.getFullYear() !== year) {
+                        cell.classList.add('other-month');
+                        cell.innerHTML = `<div class="day-number">${dayOfMonth}</div>`;
+                    } else {
+                        // Проверка на сегодняшний день
+                        if (dateObj.getFullYear() === today.getFullYear() &&
+                            dateObj.getMonth() === today.getMonth() &&
+                            dateObj.getDate() === today.getDate()) {
+                            cell.classList.add('today');
+                        }
 
-                    // День и месяц
-                    const dayLabel = dayOfMonth === 1 ? `${dayOfMonth} ${monthNames[month].substring(0, 3)}` : dayOfMonth;
-                    cell.innerHTML = `<div class="day-number">${dayLabel}</div>`;
+                        cell.innerHTML = `<div class="day-number">${dayOfMonth}</div>`;
 
-                    // Расчет свободных часов
-                    const freeMinutes = calculateFreeMinutesForDay(dateObj);
-                    const freeHours = Math.floor(freeMinutes / 60);
+                        // Расчет свободных часов
+                        const freeMinutes = calculateFreeMinutesForDay(dateObj);
+                        const freeHours = Math.floor(freeMinutes / 60);
 
-                    if (freeHours >= 1) {
-                        const freeHoursDiv = document.createElement('div');
-                        freeHoursDiv.className = 'free-hours';
-                        freeHoursDiv.textContent = `${freeHours}h`;
-                        cell.appendChild(freeHoursDiv);
-                    }
+                        if (freeHours >= 1) {
+                            const freeHoursDiv = document.createElement('div');
+                            freeHoursDiv.className = 'free-hours';
+                            freeHoursDiv.textContent = `${freeHours}h`;
+                            cell.appendChild(freeHoursDiv);
+                        }
 
-                    // Цветовая индикация
-                    if (freeHours < 2) {
-                        cell.classList.add('low-availability');
-                    } else if (freeHours < 4) {
-                        cell.classList.add('medium-availability');
+                        // Цветовая индикация
+                        if (freeHours < 2) {
+                            cell.classList.add('low-availability');
+                        } else if (freeHours < 4) {
+                            cell.classList.add('medium-availability');
+                        }
                     }
 
                     row.appendChild(cell);
+                    currentDate.setDate(currentDate.getDate() + 1);
                 }
 
                 calendarBody.appendChild(row);
+
+                // Прерываем, если прошли весь год и дошли до начала новой недели
+                if (currentDate > lastDayOfYear && currentDate.getDay() === 1) {
+                    break;
+                }
             }
         }
 
