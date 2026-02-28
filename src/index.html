@@ -6,6 +6,7 @@
     <title>Планировщик</title>
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="style.css">
+    <script src="/socket.io/socket.io.js"></script>
     <script>
         // Apply theme before page loads
         const theme = localStorage.getItem('theme');
@@ -245,9 +246,15 @@
     </div>
 
     <script>
+        // Detect group mode from URL
+        const pathParts = window.location.pathname.split('/');
+        const isGroupMode = pathParts[1] === 'group' && pathParts[2];
+        const groupId = isGroupMode ? pathParts[2] : null;
+        let socket = null;
+
         let currentDate = new Date();
         let selectedDate = null;
-        let tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+        let tasks = [];
         let editingTaskId = null;
         let activeSlot = { startTime: 0, duration: 1440 };
         let progressUpdateInterval = null;
@@ -983,11 +990,21 @@
         }
 
         function saveTasks() {
-            localStorage.setItem('tasks', JSON.stringify(tasks));
+            if (isGroupMode && socket) {
+                // In group mode, send tasks to server via socket
+                socket.emit('update-tasks', { groupId, tasks });
+            } else {
+                // In solo mode, use localStorage
+                localStorage.setItem('tasks', JSON.stringify(tasks));
+            }
         }
-        
+
         function loadTasks() {
-            tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+            if (!isGroupMode) {
+                // In solo mode, load from localStorage
+                tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+            }
+            // In group mode, tasks will be loaded via socket connection
         }
 
         function saveSettings() {
@@ -1203,12 +1220,47 @@
             document.getElementById('durationLabel').textContent = formatDurationLabel(taskDuration.value);
         });
 
+        // Initialize socket connection for group mode
+        function initializeSocket() {
+            if (!isGroupMode) return;
+
+            socket = io();
+
+            socket.on('connect', () => {
+                console.log('Connected to server');
+                socket.emit('join-group', groupId);
+            });
+
+            socket.on('tasks-updated', ({ tasks: serverTasks }) => {
+                console.log('Tasks updated from server');
+                tasks = serverTasks;
+                generateCalendar();
+                if (selectedDate) {
+                    const date = new Date(selectedDate);
+                    displayTasksForDay(date);
+                }
+            });
+
+            socket.on('disconnect', () => {
+                console.log('Disconnected from server');
+            });
+        }
+
         // Инициализация
         document.addEventListener('DOMContentLoaded', () => {
+            if (isGroupMode) {
+                // In group mode, initialize socket and wait for tasks
+                initializeSocket();
+                console.log(`Group mode active. Group ID: ${groupId}`);
+            } else {
+                // In solo mode, load tasks from localStorage
+                loadTasks();
+            }
+
             generateCalendar();
             initializeNotifications();
             applySettings();
-            
+
             // Автоматически выбираем текущий день
             const today = new Date();
             const todayStr = formatDate(today);
