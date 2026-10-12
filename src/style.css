@@ -1042,3 +1042,63 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        /* Editing a single occurrence of a recurring task */
+        .scope-switch {
+            display: flex;
+        }
+
+        .scope-switch label {
+            flex: 1;
+        }
+
+        .scope-switch span {
+            flex: 1;
+            padding: 8px 10px;
+            font-weight: normal;
+        }
+
+        #taskForm.day-scope .series-only {
+            display: none !important;
+        }
+
+        .occurrence-modified {
+            font-size: 12px;
+            font-weight: normal;
+            color: #9b59b6;
+            margin-left: 6px;
+        }
+
+        .occurrence-reset {
+            background: none;
+            border: none;
+            color: #9b59b6;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 0 4px;
+        }
+
+        .task-item.skipped {
+            display: flex;
+            align-items: center;
+            opacity: 0.6;
+            padding: 6px 10px;
+        }
+
+        .task-item.skipped .task-title {
+            text-decoration: line-through;
+            margin: 0;
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+
+        #deleteModal .form-actions {
+            flex-wrap: wrap;
+        }

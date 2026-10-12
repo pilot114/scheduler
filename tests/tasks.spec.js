@@ -27,7 +27,7 @@ test.describe('Планировщик - Управление задачами', 
       await expect(page.locator('#modalTitle')).toHaveText('Новое дело');
       
       // Закрываем модальное окно
-      await page.locator('button:has-text("Отмена")').click();
+      await page.locator('#taskModal button:has-text("Отмена")').click();
       await expect(page.locator('#taskModal')).not.toBeVisible();
     }
   });

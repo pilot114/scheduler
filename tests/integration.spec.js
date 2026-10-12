@@ -86,7 +86,7 @@ test.describe('Планировщик - Интеграционные тесты'
     const durationStep = await page.locator('#taskDuration').getAttribute('step');
     expect(durationStep).toBe('30');
     
-    await page.click('button:has-text("Отмена")');
+    await page.click('#taskModal button:has-text("Отмена")');
     
     // Включаем темную тему
     await page.click('#settings-btn');

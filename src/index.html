@@ -89,6 +89,7 @@
                 <ul>
                     <li><strong>Одиночное дело:</strong> Запланировано на конкретную дату</li>
                     <li><strong>Периодическое дело:</strong> Повторяется ежедневно, по дням недели или дням месяца</li>
+                    <li><strong>Изменение одного дня:</strong> «Редактировать» и «Удалить» у периодического дела по умолчанию действуют только на выбранный день, «Вставить» добавляет дело внутрь него. Значок ↺ возвращает день как в серии</li>
                 </ul>
 
                 <h3>Настройки</h3>
@@ -148,11 +149,18 @@
         <div class="modal-content">
             <h3 id="modalTitle">Новое дело</h3>
             <form id="taskForm">
-                <div class="form-group">
+                <div class="form-group" id="editScopeGroup">
+                    <div class="radio-group scope-switch">
+                        <label><input type="radio" name="editScope" value="day" checked><span>Только этот день</span></label>
+                        <label><input type="radio" name="editScope" value="series"><span>Вся серия</span></label>
+                    </div>
+                </div>
+
+                <div class="form-group series-only">
                     <input type="text" id="taskTitle" placeholder="Заголовок" required>
                 </div>
 
-                <div class="form-group">
+                <div class="form-group series-only">
                     <textarea id="taskDescription" placeholder="Описание"></textarea>
                 </div>
 
@@ -166,12 +174,12 @@
                     <input type="range" id="taskDuration" min="10" max="600" step="10" value="30" style="width: 100%;">
                 </div>
 
-                <div class="form-group" id="singleDateGroup">
+                <div class="form-group series-only" id="singleDateGroup">
                     <label>Дата</label>
                     <input type="date" id="taskDate">
                 </div>
 
-                <div class="form-group">
+                <div class="form-group series-only" id="taskRecurringGroup">
                     <div>
                         <label>
                             <input type="checkbox" id="taskRecurring" onchange="toggleRecurringOptions()">
@@ -180,7 +188,7 @@
                     </div>
                 </div>
 
-                <div class="recurring-options" id="recurringOptions">
+                <div class="recurring-options series-only" id="recurringOptions">
                     <div class="form-group">
                         <label>Период повторения</label>
                         <select id="recurringType" onchange="toggleRecurringDetails()">
@@ -245,17 +253,48 @@
         </div>
     </div>
 
+    <div class="modal" id="deleteModal">
+        <div class="modal-content">
+            <h3 id="deleteModalTitle">Удалить дело?</h3>
+            <div class="form-actions">
+                <button type="button" class="btn-danger" onclick="confirmDelete('day')">Только этот день</button>
+                <button type="button" class="btn-danger" onclick="confirmDelete('series')">Всю серию</button>
+                <button type="button" class="btn-secondary" onclick="closeDeleteModal()">Отмена</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // Detect group mode from URL
+        // Data is stored on the server whenever the page is served by it
+        // (socket.io client is available), otherwise (GitHub Pages) in localStorage.
+        // /group/:id opens a separate shared calendar, the root opens the default one.
         const pathParts = window.location.pathname.split('/');
-        const isGroupMode = pathParts[1] === 'group' && pathParts[2];
-        const groupId = isGroupMode ? pathParts[2] : null;
+        const urlGroupId = pathParts[1] === 'group' && pathParts[2] ? decodeURIComponent(pathParts[2]) : null;
+        const isGroupMode = typeof io !== 'undefined';
+        const groupId = isGroupMode ? (urlGroupId || 'default') : null;
         let socket = null;
+
+        // Data created in localStorage before the server was used is moved there once
+        const MIGRATED_KEY = 'migratedToServer';
+        let localDataToMigrate = null;
+        if (isGroupMode && !urlGroupId && !localStorage.getItem(MIGRATED_KEY)) {
+            localDataToMigrate = {
+                tasks: JSON.parse(localStorage.getItem('tasks') || '[]'),
+                monthNotes: JSON.parse(localStorage.getItem('monthNotes') || '{}')
+            };
+        }
 
         let currentDate = new Date();
         let selectedDate = null;
         let tasks = [];
+        let monthNotes = {};
         let editingTaskId = null;
+        // Occurrence of a recurring task opened for editing: { date, segmentIndex }
+        let editContext = null;
+        // Occurrence segment a new task is inserted into: { taskId, date, segmentIndex }
+        let insertContext = null;
+        // Task pending deletion from the scope dialog: { taskId, date, segmentIndex }
+        let deleteContext = null;
         let activeSlot = { startTime: 0, duration: 1440 };
         let progressUpdateInterval = null;
         let viewMode = 'month'; // 'month' or 'year'
@@ -279,6 +318,8 @@
 
         const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 
                           'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+        const monthNamesGenitive = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
+                          'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
 
         function checkNotifications() {
             if (!settings.notifications) return;
@@ -392,7 +433,8 @@
 
                         if (tasksForDay.length > 0) {
                             const tasksContainer = document.createElement('div');
-                            tasksForDay.slice(0, 2).forEach(task => {
+                            const uniqueTasks = tasksForDay.filter((task, i) => tasksForDay.findIndex(t => t.id === task.id) === i);
+                            uniqueTasks.slice(0, 2).forEach(task => {
                                 const taskElement = document.createElement('div');
                                 taskElement.className = 'calendar-task';
                                 taskElement.textContent = task.title;
@@ -412,6 +454,8 @@
             }
         }
 
+        // Returns tasks of the day. A recurring task yields one entry per segment of
+        // its occurrence: normally one, several if the day was split by an inserted task.
         function getTasksForDate(date, includeHidden = false) {
             const dateStr = formatDate(date);
             const allTasks = [];
@@ -421,12 +465,90 @@
                     allTasks.push(task);
                 } else if (task.type === 'recurring' && isTaskActiveOnDate(task, date)) {
                     if (includeHidden || !task.hideFromCalendar) {
-                        allTasks.push(task);
+                        const isModified = hasException(task, dateStr);
+                        getOccurrenceSegments(task, dateStr).forEach((segment, segmentIndex) => {
+                            allTasks.push({
+                                ...task,
+                                time: segment.time,
+                                duration: segment.duration,
+                                occurrenceDate: dateStr,
+                                segmentIndex,
+                                isModified
+                            });
+                        });
                     }
                 }
             });
             
             return allTasks.sort((a, b) => a.time.localeCompare(b.time));
+        }
+
+        // Recurring tasks whose occurrence on this date was deleted entirely
+        function getSkippedTasksForDate(date) {
+            const dateStr = formatDate(date);
+            return tasks.filter(task => task.type === 'recurring'
+                && isTaskActiveOnDate(task, date)
+                && hasException(task, dateStr)
+                && task.exceptions[dateStr].length === 0);
+        }
+
+        // Exceptions of a recurring task: { 'YYYY-MM-DD': [{ time, duration }, ...] }.
+        // An empty list means the occurrence is deleted on that date.
+        function hasException(task, dateStr) {
+            return !!(task.exceptions && task.exceptions[dateStr]);
+        }
+
+        function getOccurrenceSegments(task, dateStr) {
+            if (hasException(task, dateStr)) {
+                return task.exceptions[dateStr].map(s => ({ ...s }));
+            }
+            return [{ time: task.time, duration: parseInt(task.duration) }];
+        }
+
+        function setOccurrenceSegments(task, dateStr, segments) {
+            segments.sort((a, b) => a.time.localeCompare(b.time));
+            const isDefault = segments.length === 1
+                && segments[0].time === task.time
+                && segments[0].duration === parseInt(task.duration);
+
+            task.exceptions = task.exceptions || {};
+            if (isDefault) {
+                delete task.exceptions[dateStr];
+            } else {
+                task.exceptions[dateStr] = segments;
+            }
+            if (Object.keys(task.exceptions).length === 0) {
+                delete task.exceptions;
+            }
+        }
+
+        function resetOccurrence(taskId, dateStr) {
+            const task = tasks.find(t => t.id === taskId);
+            if (!task || !hasException(task, dateStr)) return;
+
+            const conflicts = findConflicts(dateStr, getOccurrenceSegments({ ...task, exceptions: null }, dateStr), o => o.id === taskId);
+            if (conflicts.length > 0) {
+                alert(`Задача пересекается со следующими задачами: ${conflicts.map(t => t.title).join(', ')}`);
+                return;
+            }
+
+            delete task.exceptions[dateStr];
+            if (Object.keys(task.exceptions).length === 0) {
+                delete task.exceptions;
+            }
+            saveTasks();
+            refreshView();
+        }
+
+        function refreshView() {
+            if (viewMode === 'year') {
+                generateYearCalendar();
+                return;
+            }
+            generateCalendar();
+            if (selectedDate) {
+                selectDate(selectedDate);
+            }
         }
 
         function isTaskActiveOnDate(task, date) {
@@ -463,6 +585,17 @@
             }
             
             return false;
+        }
+
+        function parseDate(dateStr) {
+            const [year, month, day] = dateStr.split('-').map(Number);
+            return new Date(year, month - 1, day);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text == null ? '' : String(text);
+            return div.innerHTML;
         }
 
         function formatDate(date) {
@@ -597,13 +730,19 @@
                 const li = document.createElement('li');
                 li.className = `task-item ${task.type === 'recurring' ? 'recurring' : ''} ${task.completed ? 'completed' : ''}`;
 
+                const modifiedMark = task.isModified
+                    ? `<span class="occurrence-modified" title="Изменено только в этот день">изменено
+                           <button class="occurrence-reset" title="Вернуть как в серии" onclick="resetOccurrence('${task.id}', '${task.occurrenceDate}')">↺</button>
+                       </span>`
+                    : '';
+
                 let taskInfo = `
-                    <div class="task-time">${task.time} ${formatDuration(task.duration)}</div>
-                    <div class="task-title">${task.title}</div>
+                    <div class="task-time">${task.time} ${formatDuration(task.duration)} ${modifiedMark}</div>
+                    <div class="task-title">${escapeHtml(task.title)}</div>
                 `;
 
                 if (task.description) {
-                    taskInfo += `<div style="font-size: 14px; color: #7f8c8d; margin-top: 4px;">${task.description}</div>`;
+                    taskInfo += `<div style="font-size: 14px; color: #7f8c8d; margin-top: 4px;">${escapeHtml(task.description)}</div>`;
                 }
 
                 const isToday = formatDate(date) === formatDate(new Date());
@@ -620,10 +759,15 @@
                     }
                 }
 
+                const occurrenceArgs = task.type === 'recurring'
+                    ? `'${task.id}', '${task.occurrenceDate}', ${task.segmentIndex}`
+                    : `'${task.id}'`;
+
                 taskInfo += `
                     <div class="task-actions">
-                        <button onclick="editTask('${task.id}')">Редактировать</button>
-                        <button class="delete" onclick="deleteTask('${task.id}')">Удалить</button>
+                        <button onclick="editTask(${occurrenceArgs})">Редактировать</button>
+                        ${task.type === 'recurring' && task.duration >= 2 * settings.step ? `<button onclick="insertIntoOccurrence(${occurrenceArgs})" title="Добавить дело внутри этого промежутка">Вставить</button>` : ''}
+                        <button class="delete" onclick="deleteTask(${occurrenceArgs})">Удалить</button>
                         ${task.type === 'single' && !task.completed ? `<button class="complete" onclick="completeTask('${task.id}')">Завершить</button>` : ''}
                     </div>
                 `;
@@ -654,6 +798,17 @@
                 liGap.onclick = () => showAddTaskModalWithTime(minutesToTime(currentTime), freeTimeAtEnd);
                 taskList.appendChild(liGap);
             }
+
+            getSkippedTasksForDate(date).forEach(task => {
+                const li = document.createElement('li');
+                li.className = 'task-item recurring skipped';
+                li.innerHTML = `
+                    <span class="task-title">${escapeHtml(task.title)}</span>
+                    <span class="occurrence-modified">пропущено в этот день</span>
+                    <button class="occurrence-reset" title="Вернуть как в серии" onclick="resetOccurrence('${task.id}', '${formatDate(date)}')">↺</button>
+                `;
+                taskList.appendChild(li);
+            });
         }
 
         function changeMonth(direction) {
@@ -704,9 +859,6 @@
             const today = new Date();
             const currentYearMonth = today.getFullYear() * 12 + today.getMonth();
 
-            // Load month notes from localStorage
-            let monthNotes = JSON.parse(localStorage.getItem('monthNotes') || '{}');
-
             // Create a grid container for all 12 months (2 rows x 6 columns)
             const yearGrid = document.createElement('div');
             yearGrid.className = 'year-grid-new';
@@ -736,12 +888,12 @@
                 noteArea.className = 'month-note';
                 noteArea.placeholder = isPast || isCurrent ? 'История месяца (саммари)...' : 'Планы на месяц...';
                 noteArea.value = noteValue;
+                noteArea.dataset.noteKey = noteKey;
                 noteArea.rows = 4;
 
                 // Auto-save on input
                 noteArea.addEventListener('input', (e) => {
-                    monthNotes[noteKey] = e.target.value;
-                    localStorage.setItem('monthNotes', JSON.stringify(monthNotes));
+                    saveMonthNote(noteKey, e.target.value);
                 });
 
                 monthBlock.appendChild(noteArea);
@@ -777,30 +929,44 @@
             calendarBody.appendChild(tr);
         }
 
+        function resetTaskModal() {
+            editingTaskId = null;
+            editContext = null;
+            insertContext = null;
+            document.getElementById('taskForm').reset();
+            document.getElementById('taskForm').classList.remove('day-scope');
+            document.getElementById('editScopeGroup').style.display = 'none';
+            document.getElementById('taskRecurringGroup').style.display = '';
+        }
+
+        function setSliders(startMinutes, duration) {
+            const taskTime = document.getElementById('taskTime');
+            taskTime.value = startMinutes;
+            document.getElementById('timeLabel').textContent = minutesToTime(startMinutes);
+
+            const taskDuration = document.getElementById('taskDuration');
+            taskDuration.max = Math.max(activeSlot.duration < 1440 ? activeSlot.duration : 600, duration);
+            taskDuration.value = duration;
+            document.getElementById('durationLabel').textContent = formatDurationLabel(duration);
+        }
+
         function showAddTaskModalWithTime(time, duration) {
             if (!selectedDate) {
                 alert('Пожалуйста, выберите день в календаре');
                 return;
             }
 
+            resetTaskModal();
             activeSlot.startTime = timeToMinutes(time);
             activeSlot.duration = duration;
 
-            editingTaskId = null;
             document.getElementById('modalTitle').textContent = 'Новое дело';
-            document.getElementById('taskForm').reset();
             document.getElementById('taskDate').value = selectedDate;
 
             const taskTime = document.getElementById('taskTime');
             taskTime.min = activeSlot.startTime;
             taskTime.max = activeSlot.startTime + activeSlot.duration - 10;
-            taskTime.value = activeSlot.startTime;
-            document.getElementById('timeLabel').textContent = minutesToTime(activeSlot.startTime);
-
-            const taskDuration = document.getElementById('taskDuration');
-            taskDuration.max = activeSlot.duration;
-            taskDuration.value = duration;
-            document.getElementById('durationLabel').textContent = formatDurationLabel(duration);
+            setSliders(activeSlot.startTime, duration);
 
             document.getElementById('taskRecurring').checked = false;
             document.getElementById('taskModal').style.display = 'flex';
@@ -809,46 +975,46 @@
         }
 
         function showAddTaskModal() {
-            if (!selectedDate) {
-                alert('Пожалуйста, выберите день в календаре');
-                return;
-            }
-            
-            editingTaskId = null;
-            document.getElementById('modalTitle').textContent = 'Новое дело';
-            document.getElementById('taskForm').reset();
-            document.getElementById('taskDate').value = selectedDate;
-            document.getElementById('taskTime').value = 0;
-            document.getElementById('timeLabel').textContent = '00:00';
-            document.getElementById('taskRecurring').checked = false; // Сброс чекбокса
-            document.getElementById('taskModal').style.display = 'flex';
-            toggleRecurringOptions();
-            setDefaultDates();
+            showAddTaskModalWithTime('00:00', 1440);
         }
 
-        function editTask(taskId) {
+        // Add a single task inside an occurrence of a recurring task.
+        // The occurrence is split around the new task on this day only.
+        function insertIntoOccurrence(taskId, dateStr, segmentIndex) {
             const task = tasks.find(t => t.id === taskId);
             if (!task) return;
 
+            const segment = getOccurrenceSegments(task, dateStr)[segmentIndex];
+            showAddTaskModalWithTime(segment.time, segment.duration);
+            insertContext = { taskId, date: dateStr, segmentIndex };
+
+            const step = settings.step;
+            const start = timeToMinutes(segment.time);
+            const duration = Math.max(step, Math.min(60, Math.floor(segment.duration / 3 / step) * step));
+            const offset = Math.floor((segment.duration - duration) / 2 / step) * step;
+            setSliders(start + offset, duration);
+
+            document.getElementById('modalTitle').textContent = `Вставить в «${task.title}»`;
+            document.getElementById('taskRecurringGroup').style.display = 'none';
+        }
+
+        function editTask(taskId, dateStr, segmentIndex) {
+            const task = tasks.find(t => t.id === taskId);
+            if (!task) return;
+
+            resetTaskModal();
             activeSlot.startTime = 0; // Reset for editing
             activeSlot.duration = 1440;
             
             editingTaskId = taskId;
             document.getElementById('modalTitle').textContent = 'Редактировать дело';
             
-            
             document.getElementById('taskTitle').value = task.title;
 
             const taskTime = document.getElementById('taskTime');
             taskTime.min = 0;
             taskTime.max = 1430;
-            taskTime.value = timeToMinutes(task.time);
-            document.getElementById('timeLabel').textContent = task.time;
-
-            const taskDuration = document.getElementById('taskDuration');
-            taskDuration.max = 600; // Reset to a reasonable max
-            taskDuration.value = task.duration || 30;
-            document.getElementById('durationLabel').textContent = formatDurationLabel(task.duration || 30);
+            setSliders(timeToMinutes(task.time), parseInt(task.duration) || 30);
 
             document.getElementById('taskDescription').value = task.description || '';
             document.getElementById('taskRecurring').checked = (task.type === 'recurring');
@@ -869,6 +1035,13 @@
                     document.getElementById('monthDays').value = task.monthDays || (task.monthDay ? task.monthDay.toString() : '1');
                     document.getElementById('countFromEnd').checked = task.countFromEnd || false;
                 }
+
+                // Opened from a specific day: by default edit only this occurrence
+                if (dateStr) {
+                    editContext = { date: dateStr, segmentIndex };
+                    document.getElementById('editScopeGroup').style.display = '';
+                    setEditScope('day');
+                }
             }
             
             toggleRecurringOptions();
@@ -876,26 +1049,73 @@
             document.getElementById('taskModal').style.display = 'flex';
         }
 
+        function setEditScope(scope) {
+            const task = tasks.find(t => t.id === editingTaskId);
+            document.querySelector(`input[name="editScope"][value="${scope}"]`).checked = true;
+            document.getElementById('taskForm').classList.toggle('day-scope', scope === 'day');
+
+            if (scope === 'day') {
+                const segment = getOccurrenceSegments(task, editContext.date)[editContext.segmentIndex];
+                const [, month, day] = editContext.date.split('-').map(Number);
+                document.getElementById('modalTitle').textContent = `«${task.title}» — ${day} ${monthNamesGenitive[month - 1]}`;
+                setSliders(timeToMinutes(segment.time), segment.duration);
+            } else {
+                document.getElementById('modalTitle').textContent = 'Редактировать дело';
+                setSliders(timeToMinutes(task.time), parseInt(task.duration));
+            }
+        }
+
+        function getEditScope() {
+            return editContext ? document.querySelector('input[name="editScope"]:checked').value : 'series';
+        }
+
         function completeTask(taskId) {
             const taskIndex = tasks.findIndex(t => t.id === taskId);
             if (taskIndex !== -1) {
                 tasks[taskIndex].completed = true;
                 saveTasks();
-                if (selectedDate) {
-                    displayTasksForDay(new Date(selectedDate));
-                }
+                refreshView();
             }
         }
 
-        function deleteTask(taskId) {
+        function deleteTask(taskId, dateStr, segmentIndex) {
+            const task = tasks.find(t => t.id === taskId);
+            if (!task) return;
+
+            if (task.type === 'recurring' && dateStr) {
+                deleteContext = { taskId, date: dateStr, segmentIndex };
+                document.getElementById('deleteModalTitle').textContent = `Удалить «${task.title}»?`;
+                document.getElementById('deleteModal').style.display = 'flex';
+                return;
+            }
+
             if (confirm('Вы уверены, что хотите удалить это дело?')) {
                 tasks = tasks.filter(t => t.id !== taskId);
                 saveTasks();
-                generateCalendar();
-                if (selectedDate) {
-                    selectDate(selectedDate);
-                }
+                refreshView();
             }
+        }
+
+        function confirmDelete(scope) {
+            const { taskId, date, segmentIndex } = deleteContext;
+            const task = tasks.find(t => t.id === taskId);
+            closeDeleteModal();
+            if (!task) return;
+
+            if (scope === 'day') {
+                const segments = getOccurrenceSegments(task, date);
+                segments.splice(segmentIndex, 1);
+                setOccurrenceSegments(task, date, segments);
+            } else {
+                tasks = tasks.filter(t => t.id !== taskId);
+            }
+            saveTasks();
+            refreshView();
+        }
+
+        function closeDeleteModal() {
+            deleteContext = null;
+            document.getElementById('deleteModal').style.display = 'none';
         }
 
         function setDefaultDates() {
@@ -935,6 +1155,8 @@
 
         function closeModal() {
             document.getElementById('taskModal').style.display = 'none';
+            editContext = null;
+            insertContext = null;
         }
 
         function closeSettingsModal() {
@@ -945,48 +1167,47 @@
             document.getElementById('infoModal').style.display = 'none';
         }
 
-        function checkOverlap(task) {
-            const newStartTime = timeToMinutes(task.time);
-            const newEndTime = newStartTime + parseInt(task.duration);
-            const overlappingTasks = [];
+        function rangesOverlap(a, b) {
+            const aStart = timeToMinutes(a.time);
+            const bStart = timeToMinutes(b.time);
+            return aStart < bStart + parseInt(b.duration) && bStart < aStart + parseInt(a.duration);
+        }
 
-            for (const existingTask of tasks) {
-                if (task.id === existingTask.id) {
-                    continue; // Don't compare a task with itself
-                }
+        // Tasks of the given day overlapping any of the segments, except those matched by isSelf
+        function findConflicts(dateStr, segments, isSelf) {
+            return getTasksForDate(parseDate(dateStr), true)
+                .filter(other => !isSelf(other) && segments.some(segment => rangesOverlap(segment, other)));
+        }
 
-                const existingStartTime = timeToMinutes(existingTask.time);
-                const existingEndTime = existingStartTime + parseInt(existingTask.duration);
+        const MAX_OVERLAP_CHECK_DAYS = 2 * 366;
 
-                const overlap = (newStartTime < existingEndTime && newEndTime > existingStartTime);
+        function checkOverlap(task, isSelf = other => other.id === task.id) {
+            const found = new Map();
+            const collect = (dateStr, segments) => {
+                findConflicts(dateStr, segments, isSelf).forEach(other => found.set(other.id, other));
+            };
 
-                if (task.type === 'single' && existingTask.type === 'single') {
-                    if (task.date === existingTask.date && overlap) {
-                        overlappingTasks.push(existingTask);
-                    }
-                } else if (task.type === 'single' && existingTask.type === 'recurring') {
-                    const taskDate = new Date(task.date);
-                    if (isTaskActiveOnDate(existingTask, taskDate) && overlap) {
-                        overlappingTasks.push(existingTask);
-                    }
-                } else if (task.type === 'recurring' && existingTask.type === 'single') {
-                    const existingTaskDate = new Date(existingTask.date);
-                    if (isTaskActiveOnDate(task, existingTaskDate) && overlap) {
-                        overlappingTasks.push(existingTask);
-                    }
-                } else if (task.type === 'recurring' && existingTask.type === 'recurring') {
-                    const start = new Date(Math.max(new Date(task.startDate + 'T00:00:00').getTime(), new Date(existingTask.startDate + 'T00:00:00').getTime()));
-                    const end = new Date(Math.min(new Date((task.endDate || '9999-12-31') + 'T00:00:00').getTime(), new Date((existingTask.endDate || '9999-12-31') + 'T00:00:00').getTime()));
+            if (task.type === 'single') {
+                collect(task.date, [task]);
+            } else {
+                const start = parseDate(task.startDate);
+                const limit = new Date(start);
+                limit.setDate(limit.getDate() + MAX_OVERLAP_CHECK_DAYS);
+                const end = task.endDate && parseDate(task.endDate) < limit ? parseDate(task.endDate) : limit;
 
-                    for (let d = start; d <= end; d.setDate(d.getDate() + 1)) {
-                        if (isTaskActiveOnDate(task, d) && isTaskActiveOnDate(existingTask, d) && overlap) {
-                            overlappingTasks.push(existingTask);
-                            break; // Found an overlap for this task, no need to check further dates
-                        }
+                for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                    if (isTaskActiveOnDate(task, d)) {
+                        const dateStr = formatDate(d);
+                        collect(dateStr, getOccurrenceSegments(task, dateStr));
                     }
                 }
             }
-            return overlappingTasks;
+            return [...found.values()];
+        }
+
+        function alertOverlap(overlappingTasks) {
+            const taskTitles = overlappingTasks.map(t => t.title).join(', ');
+            alert(`Задача пересекается со следующими задачами: ${taskTitles}`);
         }
 
         function saveTasks() {
@@ -1003,8 +1224,25 @@
             if (!isGroupMode) {
                 // In solo mode, load from localStorage
                 tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+                monthNotes = JSON.parse(localStorage.getItem('monthNotes') || '{}');
             }
-            // In group mode, tasks will be loaded via socket connection
+            // In group mode, data will be loaded via socket connection
+        }
+
+        const noteSendTimers = {};
+
+        function saveMonthNote(key, value) {
+            monthNotes[key] = value;
+            if (isGroupMode && socket) {
+                // Debounce typing, send each month separately
+                clearTimeout(noteSendTimers[key]);
+                noteSendTimers[key] = setTimeout(() => {
+                    delete noteSendTimers[key];
+                    socket.emit('update-month-note', { groupId, key, value: monthNotes[key] || '' });
+                }, 500);
+            } else {
+                localStorage.setItem('monthNotes', JSON.stringify(monthNotes));
+            }
         }
 
         function saveSettings() {
@@ -1036,11 +1274,16 @@
         document.getElementById('taskForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
-            const isRecurring = document.getElementById('taskRecurring').checked;
+            const isRecurring = document.getElementById('taskRecurring').checked && !insertContext;
             const title = document.getElementById('taskTitle').value;
-            const time = minutesToTime(document.getElementById('taskTime').value);
+            const time = minutesToTime(parseInt(document.getElementById('taskTime').value));
             const duration = document.getElementById('taskDuration').value;
             const description = document.getElementById('taskDescription').value;
+
+            if (getEditScope() === 'day') {
+                saveOccurrence(time, parseInt(duration));
+                return;
+            }
             
             if (!title || !time) {
                 alert('Пожалуйста, заполните обязательные поля');
@@ -1072,12 +1315,22 @@
                     taskData.countFromEnd = document.getElementById('countFromEnd').checked;
                     delete taskData.monthDay; // Remove old property
                 }
+
+                // Changes made to individual days survive editing of the series
+                const existing = tasks.find(t => t.id === editingTaskId);
+                if (existing && existing.exceptions) {
+                    taskData.exceptions = existing.exceptions;
+                }
             }
+
+            // The occurrence a task is inserted into gets split, so it is not a conflict
+            const host = insertContext;
+            const isSelf = other => other.id === taskData.id
+                || (host && other.id === host.taskId && other.segmentIndex === host.segmentIndex);
             
-            const overlappingTasks = checkOverlap(taskData);
+            const overlappingTasks = checkOverlap(taskData, isSelf);
             if (overlappingTasks.length > 0) {
-                const taskTitles = overlappingTasks.map(t => t.title).join(', ');
-                alert(`Задача пересекается со следующими задачами: ${taskTitles}`);
+                alertOverlap(overlappingTasks);
                 return;
             }
             
@@ -1087,14 +1340,56 @@
             } else {
                 tasks.push(taskData);
             }
+
+            if (host) {
+                splitOccurrence(host, timeToMinutes(time), timeToMinutes(time) + parseInt(duration));
+            }
             
             saveTasks();
-            generateCalendar();
-            if (selectedDate) {
-                selectDate(selectedDate);
-            }
+            refreshView();
             closeModal();
         });
+
+        // Change time of a single occurrence segment of a recurring task
+        function saveOccurrence(time, duration) {
+            const task = tasks.find(t => t.id === editingTaskId);
+            const { date, segmentIndex } = editContext;
+
+            const segments = getOccurrenceSegments(task, date);
+            segments[segmentIndex] = { time, duration };
+
+            const conflicts = findConflicts(date, [{ time, duration }],
+                other => other.id === task.id && other.segmentIndex === segmentIndex);
+            // Other segments of the same occurrence are in the list too, so they are checked as well
+            if (conflicts.length > 0) {
+                alertOverlap(conflicts);
+                return;
+            }
+
+            setOccurrenceSegments(task, date, segments);
+            saveTasks();
+            refreshView();
+            closeModal();
+        }
+
+        // Cut [start, end) out of an occurrence segment, leaving the parts before and after
+        function splitOccurrence({ taskId, date, segmentIndex }, start, end) {
+            const task = tasks.find(t => t.id === taskId);
+            const segments = getOccurrenceSegments(task, date);
+            const segment = segments[segmentIndex];
+            const segmentStart = timeToMinutes(segment.time);
+            const segmentEnd = segmentStart + segment.duration;
+
+            const parts = [];
+            if (start > segmentStart) {
+                parts.push({ time: segment.time, duration: start - segmentStart });
+            }
+            if (segmentEnd > end) {
+                parts.push({ time: minutesToTime(end), duration: segmentEnd - end });
+            }
+            segments.splice(segmentIndex, 1, ...parts);
+            setOccurrenceSegments(task, date, segments);
+        }
 
         // Закрытие модального окна при клике вне его
         document.getElementById('taskModal').addEventListener('click', function(e) {
@@ -1107,6 +1402,16 @@
             if (e.target === this) {
                 closeSettingsModal();
             }
+        });
+
+        document.getElementById('deleteModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeDeleteModal();
+            }
+        });
+
+        document.querySelectorAll('input[name="editScope"]').forEach(radio => {
+            radio.addEventListener('change', () => setEditScope(radio.value));
         });
 
         document.getElementById('infoModal').addEventListener('click', function(e) {
@@ -1155,7 +1460,8 @@
         document.getElementById('export-btn').addEventListener('click', () => {
             const data = {
                 tasks: tasks,
-                settings: settings
+                settings: settings,
+                monthNotes: monthNotes
             };
             const dataStr = JSON.stringify(data, null, 2);
             const blob = new Blob([dataStr], {type: "application/json"});
@@ -1185,12 +1491,10 @@
                         tasks = data.tasks;
                         settings = data.settings;
                         saveTasks();
+                        Object.entries(data.monthNotes || {}).forEach(([key, value]) => saveMonthNote(key, value));
                         localStorage.setItem('settings', JSON.stringify(settings));
                         applySettings();
-                        generateCalendar();
-                        if (selectedDate) {
-                            selectDate(selectedDate);
-                        }
+                        refreshView();
                         alert('Данные успешно импортированы!');
                     } else {
                         alert('Неверный формат файла.');
@@ -1234,11 +1538,45 @@
             socket.on('tasks-updated', ({ tasks: serverTasks }) => {
                 console.log('Tasks updated from server');
                 tasks = serverTasks;
-                generateCalendar();
-                if (selectedDate) {
-                    const date = new Date(selectedDate);
-                    displayTasksForDay(date);
+
+                if (localDataToMigrate && localDataToMigrate.tasks) {
+                    const known = new Set(tasks.map(t => t.id));
+                    const missing = localDataToMigrate.tasks.filter(t => !known.has(t.id));
+                    localDataToMigrate.tasks = null;
+                    if (missing.length > 0) {
+                        tasks = tasks.concat(missing);
+                        saveTasks();
+                    }
                 }
+
+                if (viewMode === 'month') {
+                    generateCalendar();
+                }
+                if (selectedDate) {
+                    displayTasksForDay(parseDate(selectedDate));
+                }
+            });
+
+            socket.on('month-notes-updated', ({ monthNotes: serverNotes }) => {
+                // Keep notes that are still being typed and not sent yet
+                Object.keys(noteSendTimers).forEach(key => {
+                    if (key in monthNotes) serverNotes[key] = monthNotes[key];
+                });
+                monthNotes = serverNotes;
+
+                if (localDataToMigrate && !localDataToMigrate.tasks) {
+                    Object.entries(localDataToMigrate.monthNotes).forEach(([key, value]) => {
+                        if (value && !monthNotes[key]) saveMonthNote(key, value);
+                    });
+                    localDataToMigrate = null;
+                    localStorage.setItem(MIGRATED_KEY, '1');
+                }
+
+                document.querySelectorAll('.month-note').forEach(noteArea => {
+                    if (noteArea !== document.activeElement) {
+                        noteArea.value = monthNotes[noteArea.dataset.noteKey] || '';
+                    }
+                });
             });
 
             socket.on('disconnect', () => {
@@ -1249,9 +1587,9 @@
         // Инициализация
         document.addEventListener('DOMContentLoaded', () => {
             if (isGroupMode) {
-                // In group mode, initialize socket and wait for tasks
+                // Server mode: initialize socket and wait for tasks
                 initializeSocket();
-                console.log(`Group mode active. Group ID: ${groupId}`);
+                console.log(`Server mode active. Group ID: ${groupId}`);
             } else {
                 // In solo mode, load tasks from localStorage
                 loadTasks();
