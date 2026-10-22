@@ -20,14 +20,6 @@ install: ## зависимости тестов и сервера
 dev: ## статика на :8080
 	npm run serve
 
-.PHONY: test
-test: ## тесты Playwright
-	npx playwright test --reporter=line
-
-.PHONY: lint
-lint: ## статический анализ
-	@echo "линтера нет"
-
 .PHONY: build
 build: ## сборка
 	@echo "сборки нет: src/ раздаётся как есть"
