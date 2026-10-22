@@ -15,26 +15,29 @@ test.describe('Планировщик - Изменение повторяюще�
     recurringType: 'daily',
     startDate: '2026-01-01',
     endDate: '2026-12-31',
-    hideFromCalendar: false
+    hideFromCalendar: false,
   };
 
   async function setRange(page, selector, value) {
-    await page.evaluate(([selector, value]) => {
-      const input = document.querySelector(selector);
-      input.value = value;
-      input.dispatchEvent(new Event('input'));
-    }, [selector, value]);
+    await page.evaluate(
+      ([selector, value]) => {
+        const input = document.querySelector(selector);
+        input.value = value;
+        input.dispatchEvent(new Event('input'));
+      },
+      [selector, value],
+    );
   }
 
   async function openDay(page, date) {
-    await page.evaluate(date => selectDate(date), date);
+    await page.evaluate((date) => selectDate(date), date);
   }
 
-  const items = page => page.locator('#taskList .task-item:not(.skipped)');
+  const items = (page) => page.locator('#taskList .task-item:not(.skipped)');
 
   test.beforeEach(async ({ page }) => {
     await page.goto('/index.html');
-    await page.evaluate(task => {
+    await page.evaluate((task) => {
       localStorage.clear();
       localStorage.setItem('tasks', JSON.stringify([task]));
     }, work);
@@ -141,13 +144,21 @@ test.describe('Планировщик - Изменение повторяюще�
 
   test('Правка дня не может пересечься с другим делом', async ({ page }) => {
     await page.evaluate(() => {
-      tasks.push({ id: 'lunch', type: 'single', title: 'Обед', date: '2026-10-07', time: '18:30', duration: '60', description: '' });
+      tasks.push({
+        id: 'lunch',
+        type: 'single',
+        title: 'Обед',
+        date: '2026-10-07',
+        time: '18:30',
+        duration: '60',
+        description: '',
+      });
       saveTasks();
       selectDate('2026-10-07');
     });
 
     let message = '';
-    page.on('dialog', async dialog => {
+    page.on('dialog', async (dialog) => {
       message = dialog.message();
       await dialog.accept();
     });

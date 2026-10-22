@@ -10,7 +10,7 @@ const WRITE_DELAY_MS = 300;
 
 fs.mkdirSync(DATA_DIR, { recursive: true });
 
-const cache = new Map();         // groupId -> { tasks, monthNotes }
+const cache = new Map(); // groupId -> { tasks, monthNotes }
 const pendingWrites = new Map(); // groupId -> timeout
 
 function isValidGroupId(groupId) {
@@ -35,7 +35,7 @@ function getGroup(groupId) {
     const raw = JSON.parse(fs.readFileSync(fileFor(groupId), 'utf8'));
     data = {
       tasks: Array.isArray(raw.tasks) ? raw.tasks : [],
-      monthNotes: raw.monthNotes && typeof raw.monthNotes === 'object' ? raw.monthNotes : {}
+      monthNotes: raw.monthNotes && typeof raw.monthNotes === 'object' ? raw.monthNotes : {},
     };
   } catch (err) {
     if (err.code !== 'ENOENT') {
@@ -61,7 +61,10 @@ function writeGroup(groupId) {
 
 function scheduleWrite(groupId) {
   clearTimeout(pendingWrites.get(groupId));
-  pendingWrites.set(groupId, setTimeout(() => writeGroup(groupId), WRITE_DELAY_MS));
+  pendingWrites.set(
+    groupId,
+    setTimeout(() => writeGroup(groupId), WRITE_DELAY_MS),
+  );
 }
 
 function setTasks(groupId, tasks) {

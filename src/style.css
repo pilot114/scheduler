@@ -1,1104 +1,1108 @@
 * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: #f5f5f5;
-            color: #333;
-            transition: background-color 0.3s, color 0.3s;
-        }
-
-        html.dark-mode body {
-            background-color: #1a1a1a;
-            color: #f1f1f1;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        .header-container {
-            position: sticky;
-            top: 0;
-            z-index: 100;
-         #   background-color: #2c3e50;
-         #   margin-bottom: 20px;
-        }
-
-        .header {
-            background-color: #2c3e50;
-            color: white;
-            padding: 20px;
-            border-radius: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .header h1 {
-            flex-grow: 1;
-            text-align: center;
-            margin: 0;
-        }
-
-        .controls {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
-        #notifyButton-modal {
-            background-color: #3498db;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        #notifyButton-modal:hover {
-            background-color: #2980b9;
-        }
-
-        #installPwaButton {
-            background-color: #27ae60;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        #installPwaButton:hover {
-            background-color: #219a52;
-        }
-
-        html.dark-mode .header {
-            background-color: #2c3e50;
-        }
-
-        .main-content {
-            display: grid;
-            grid-template-columns: 1fr 400px;
-            gap: 20px;
-        }
-
-        .main-content.year-view {
-            grid-template-columns: 1fr;
-        }
-
-        .main-content.year-view .day-panel {
-            display: none;
-        }
-
-        .main-content.year-view .calendar thead {
-            display: none;
-        }
-
-        .calendar-section {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        html.dark-mode .calendar-section {
-            background: #2a2a2a;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
-        }
-
-        .month-selector {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .month-selector button {
-            background: #3498db;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-
-        .month-selector button:hover {
-            background: #2980b9;
-        }
-
-        .calendar {
-            width: 100%;
-            border-collapse: collapse;
-            table-layout: fixed;
-        }
-
-        .calendar th {
-            background: #34495e;
-            color: white;
-            padding: 10px;
-            text-align: center;
-        }
-
-        html.dark-mode .calendar th {
-            background: #3c4043;
-        }
-
-        .calendar td {
-            border: 1px solid #ecf0f1;
-            padding: 5px;
-            height: 100px;
-            vertical-align: top;
-            position: relative;
-            cursor: pointer;
-            overflow: hidden;
-        }
-
-        html.dark-mode .calendar td {
-            border-color: #444;
-        }
-
-        .calendar td:hover {
-            background: #f8f9fa;
-        }
-
-        html.dark-mode .calendar td:hover {
-            background: #333;
-        }
-
-        .calendar td.other-month {
-            color: #bdc3c7;
-            background: #f8f9fa;
-        }
-
-        html.dark-mode .calendar td.other-month {
-            color: #666;
-            background: #222;
-        }
-
-        .calendar td.selected {
-            box-shadow: inset 0 0 0 2px #3498db;
-        }
-
-        html.dark-mode .calendar td.selected {
-            box-shadow: inset 0 0 0 2px #3498db;
-        }
-
-        .day-number {
-            font-weight: bold;
-            margin-bottom: 4px;
-        }
-
-        .free-hours {
-            font-size: 12px;
-            font-weight: bold;
-            color: #27ae60; /* Green */
-            position: absolute;
-            bottom: 5px;
-            right: 5px;
-        }
-
-        .calendar td.low-availability {
-            background-color: #ffebee; /* Light Red */
-        }
-
-        .calendar td.medium-availability {
-            background-color: #fffde7; /* Light Yellow */
-        }
-
-        html.dark-mode .calendar td.low-availability {
-            background-color: #4a1e1e;
-        }
-
-        html.dark-mode .calendar td.medium-availability {
-            background-color: #4d4d1f;
-        }
-
-        .calendar-task {
-            background: #e3f2fd;
-            color: #2c3e50;
-            padding: 2px 4px;
-            border-radius: 4px;
-            font-size: 12px;
-            margin-top: 2px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        html.dark-mode .calendar-task {
-            background: #004a7f;
-            color: #f1f1f1;
-        }
-
-        .day-panel {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            height: fit-content;
-        }
-
-        html.dark-mode .day-panel {
-            background: #2a2a2a;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
-        }
-
-        .day-panel h3 {
-            margin-bottom: 15px;
-            color: #2c3e50;
-        }
-
-        html.dark-mode .day-panel h3 {
-            color: #f1f1f1;
-        }
-
-        .add-task-btn {
-            background: #27ae60;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-            width: 100%;
-            margin-bottom: 15px;
-        }
-
-        .add-task-btn:hover {
-            background: #219a52;
-        }
-
-        
-
-        .task-list {
-            list-style: none;
-        }
-
-        .task-item {
-            background: #f8f9fa;
-            padding: 10px;
-            margin-bottom: 8px;
-            border-radius: 4px;
-            border-left: 4px solid #3498db;
-            position: relative;
-        }
-
-        html.dark-mode .task-item {
-            background: #333;
-            border-left-color: #3498db;
-        }
-
-        .task-item.recurring {
-            border-left-color: #9b59b6;
-        }
-
-        html.dark-mode .task-item.recurring {
-            border-left-color: #9b59b6;
-        }
-
-        .task-progress-text {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            font-size: 14px;
-            font-weight: bold;
-            color: #27ae60;
-        }
-
-        .task-time {
-            font-weight: bold;
-            color: #2c3e50;
-        }
-
-        html.dark-mode .task-time {
-            color: #f1f1f1;
-        }
-
-        .task-title {
-            margin: 4px 0;
-        }
-
-        .task-actions {
-            margin-top: 8px;
-        }
-
-        .task-actions button {
-            background: none;
-            border: 1px solid #bdc3c7;
-            padding: 4px 8px;
-            margin-right: 5px;
-            border-radius: 3px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-
-        html.dark-mode .task-actions button {
-            color: #f1f1f1;
-            border-color: #666;
-        }
-
-        .task-actions button:hover {
-            background: #ecf0f1;
-        }
-
-        html.dark-mode .task-actions button:hover {
-            background: #444;
-        }
-
-        .task-actions button.delete {
-            color: #e74c3c;
-            border-color: #e74c3c;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        .modal-content {
-            background: white;
-            padding: 30px;
-            border-radius: 8px;
-            width: 90%;
-            max-width: 500px;
-        }
-
-        html.dark-mode .modal-content {
-            background: #2a2a2a;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group label {
-            display: flex;
-            align-items: center;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-
-        html.dark-mode .form-group input,
-        html.dark-mode .form-group select,
-        html.dark-mode .form-group textarea {
-            background: #333;
-            color: #f1f1f1;
-            border-color: #555;
-        }
-
-        .form-group input[type=checkbox] {
-            width: auto;
-            margin-right: 10px;
-        }
-
-        .form-group textarea {
-            resize: vertical;
-            min-height: 60px;
-        }
-
-        .form-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .form-actions button {
-            flex: 1;
-            padding: 10px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .btn-primary {
-            background: #3498db;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #2980b9;
-        }
-
-        .btn-secondary {
-            background: #95a5a6;
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background: #7f8c8d;
-        }
-
-        .recurring-options {
-            display: none;
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 4px;
-            margin-top: 10px;
-        }
-
-        .date-range-group {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-
-        html.dark-mode .recurring-options {
-            background: #333;
-        }
-
-        .weekdays-selector {
-            display: flex;
-            gap: 5px;
-            margin-top: 10px;
-        }
-
-        .weekdays-selector label {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 5px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        html.dark-mode .weekdays-selector label {
-            border-color: #555;
-        }
-
-        .monthly-options-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 15px;
-            align-items: end;
-        }
-
-        .checkbox-group {
-            margin-bottom: 10px; /* Align checkbox with the input field */
-        }
-
-        .weekdays-selector input[type="checkbox"] {
-            margin-top: 5px;
-        }
-
-        #modalTitle {
-            padding-bottom: 10px;
-        }
-
-        .time-gap {
-            background: #e0f7fa;
-            padding: 10px;
-            margin-bottom: 8px;
-            border-radius: 4px;
-            border-left: 4px solid #00bcd4;
-            text-align: center;
-            color: #00838f;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        html.dark-mode .time-gap {
-            background: #00343d;
-            color: #7ddde8;
-            border-left-color: #00bcd4;
-        }
-
-        .gap-info {
-            font-size: 14px;
-        }
-
-        @media (max-width: 768px) {
-            .main-content {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .task-item.completed {
-            text-decoration: line-through;
-            opacity: 0.6;
-        }
-
-        /* Theme switcher */
-        .theme-switcher {
-            position: relative;
-            display: inline-block;
-            width: 60px;
-            height: 34px;
-        }
-
-        .theme-switcher input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #ccc;
-            transition: .4s;
-            border-radius: 34px;
-        }
-
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 26px;
-            width: 26px;
-            left: 4px;
-            bottom: 4px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-
-        input:checked + .slider {
-            background-color: #2196F3;
-        }
-
-        input:focus + .slider {
-            box-shadow: 0 0 1px #2196F3;
-        }
-
-        input:checked + .slider:before {
-            transform: translateX(26px);
-        }
-
-        .slider.round {
-            border-radius: 34px;
-        }
-
-        .slider.round:before {
-            border-radius: 50%;
-        }
-
-        .settings-button, .view-mode-button, .info-button {
-            background: none;
-            border: none;
-            color: white;
-            cursor: pointer;
-            font-size: 24px;
-            padding: 0 10px;
-            line-height: 1;
-        }
-
-        .view-mode-button:hover, .settings-button:hover, .info-button:hover {
-            opacity: 0.8;
-        }
-
-        .radio-group {
-            display: inline-flex;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            overflow: hidden;
-        }
-
-        .radio-group label {
-            margin-bottom: 0;
-        }
-
-        .radio-group input[type="radio"] {
-            display: none;
-        }
-
-        .radio-group span {
-            display: block;
-            padding: 10px 15px;
-            text-align: center;
-            cursor: pointer;
-            background: #f8f9fa;
-            user-select: none;
-            border-left: 1px solid #ddd;
-        }
-
-        .radio-group label:first-child span {
-            border-left: none;
-        }
-
-        .radio-group input[type="radio"]:checked + span {
-            background: #3498db;
-            color: white;
-        }
-
-        html.dark-mode .radio-group {
-            border-color: #555;
-        }
-
-        html.dark-mode .radio-group span {
-            background: #333;
-            border-left-color: #555;
-        }
-
-        html.dark-mode .radio-group input[type="radio"]:checked + span {
-            background: #007bff;
-        }
-
-        .btn-group {
-            display: flex;
-        }
-
-        .btn-group button {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid #ddd;
-            background: #f8f9fa;
-            cursor: pointer;
-        }
-
-        .btn-group button:first-child {
-            border-top-left-radius: 4px;
-            border-bottom-left-radius: 4px;
-        }
-
-        .btn-group button:last-child {
-            border-top-right-radius: 4px;
-            border-bottom-right-radius: 4px;
-            border-left: none;
-        }
-
-        html.dark-mode .btn-group button {
-            background: #333;
-            border-color: #555;
-            color: #f1f1f1;
-        }
-
-        /* Year view calendar */
-        .main-content.year-view .calendar td {
-            padding: 4px;
-            height: 40px;
-            font-size: 11px;
-        }
-
-        .main-content.year-view .day-number {
-            font-size: 10px;
-        }
-
-        .main-content.year-view .free-hours {
-            font-size: 8px;
-            bottom: 1px;
-            right: 1px;
-        }
-
-        .month-label {
-            font-weight: bold;
-            background: #34495e !important;
-            color: white !important;
-            text-align: center;
-            vertical-align: middle;
-            min-width: 80px;
-            cursor: default !important;
-        }
-
-        html.dark-mode .month-label {
-            background: #3c4043 !important;
-        }
-
-        .main-content.year-view .month-label {
-            font-size: 11px;
-            padding: 4px;
-        }
-
-        /* Year grid layout */
-        .year-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            padding: 10px;
-            width: 100%;
-        }
-
-        .month-container {
-            display: flex;
-            flex-direction: row;
-            align-items: flex-start;
-            gap: 8px;
-        }
-
-        .month-side-label {
-            writing-mode: vertical-rl;
-            text-orientation: mixed;
-            font-weight: bold;
-            background: #34495e;
-            color: white;
-            padding: 8px 4px;
-            border-radius: 4px;
-            font-size: 12px;
-            text-align: center;
-            min-height: 150px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        html.dark-mode .month-side-label {
-            background: #3c4043;
-        }
-
-        .month-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 2px;
-            flex: 1;
-        }
-
-        .month-day {
-            aspect-ratio: 1;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            padding: 4px;
-            cursor: pointer;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: white;
-            font-size: 10px;
-            transition: all 0.2s;
-        }
-
-        .month-day:hover {
-            background: #e8f4f8;
-            transform: scale(1.05);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .month-day.empty {
-            border: none;
-            background: transparent;
-            cursor: default;
-        }
-
-        .month-day.today {
-            background: #3498db;
-            color: white;
-            font-weight: bold;
-        }
-
-        .month-day.today:hover {
-            background: #2980b9;
-        }
-
-        .month-day .day-number {
-            font-size: 10px;
-            font-weight: 500;
-        }
-
-        .month-day .free-hours {
-            font-size: 7px;
-            margin-top: 2px;
-            opacity: 0.8;
-        }
-
-        .month-day.low-availability {
-            background: #ffebee;
-        }
-
-        .month-day.medium-availability {
-            background: #fff3e0;
-        }
-
-        html.dark-mode .month-day {
-            background: #2c2c2c;
-            border-color: #444;
-            color: #f1f1f1;
-        }
-
-        html.dark-mode .month-day:hover {
-            background: #3a3a3a;
-        }
-
-        html.dark-mode .month-day.today {
-            background: #2980b9;
-        }
-
-        html.dark-mode .month-day.low-availability {
-            background: #4a2c2c;
-        }
-
-        html.dark-mode .month-day.medium-availability {
-            background: #4a3c2c;
-        }
-
-        /* Responsive layout for year view */
-        @media (max-width: 1200px) {
-            .year-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media (max-width: 768px) {
-            .year-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* Info modal */
-        .info-modal-content {
-            max-width: 600px;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-
-        .info-content {
-            text-align: left;
-            line-height: 1.6;
-        }
-
-        .info-content h3 {
-            color: #2c3e50;
-            margin-top: 20px;
-            margin-bottom: 10px;
-        }
-
-        html.dark-mode .info-content h3 {
-            color: #f1f1f1;
-        }
-
-        .info-content ul {
-            margin-left: 20px;
-            margin-bottom: 15px;
-        }
-
-        .info-content li {
-            margin-bottom: 8px;
-        }
-
-        .info-content ul ul {
-            margin-top: 5px;
-        }
-
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 12px;
-            height: 12px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 10px;
-            border: 2px solid #f1f1f1;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #555;
-        }
-
-        html.dark-mode ::-webkit-scrollbar-track {
-            background: #2a2a2a;
-        }
-
-        html.dark-mode ::-webkit-scrollbar-thumb {
-            background: #555;
-            border-color: #2a2a2a;
-        }
-
-        html.dark-mode ::-webkit-scrollbar-thumb:hover {
-            background: #777;
-        }
-
-        /* Firefox scrollbar */
-        * {
-            scrollbar-width: thin;
-            scrollbar-color: #888 #f1f1f1;
-        }
-
-        html.dark-mode * {
-            scrollbar-color: #555 #2a2a2a;
-        }
-
-        /* New Year View (2x6 grid) */
-        .year-grid-new {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-            padding: 20px;
-            width: 100%;
-        }
-
-        .month-block {
-            background: white;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            transition: all 0.3s;
-        }
-
-        .month-block:hover {
-            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-            transform: translateY(-2px);
-        }
-
-        .month-block.current-month {
-            border-color: #3498db;
-            background: #f0f8ff;
-        }
-
-        html.dark-mode .month-block {
-            background: #2a2a2a;
-            border-color: #444;
-        }
-
-        html.dark-mode .month-block.current-month {
-            border-color: #3498db;
-            background: #1a3a4a;
-        }
-
-        .month-block-header {
-            font-size: 16px;
-            font-weight: bold;
-            color: #2c3e50;
-            text-align: center;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #ecf0f1;
-        }
-
-        html.dark-mode .month-block-header {
-            color: #f1f1f1;
-            border-bottom-color: #444;
-        }
-
-        .month-note {
-            flex: 1;
-            min-height: 80px;
-            resize: vertical;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            padding: 8px;
-            font-family: inherit;
-            font-size: 13px;
-            line-height: 1.4;
-        }
-
-        .month-note:focus {
-            outline: none;
-            border-color: #3498db;
-            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
-        }
-
-        html.dark-mode .month-note {
-            background: #1a1a1a;
-            border-color: #555;
-            color: #f1f1f1;
-        }
-
-        .month-details-btn {
-            background: #3498db;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            transition: background 0.2s;
-        }
-
-        .month-details-btn:hover {
-            background: #2980b9;
-        }
-
-        /* Responsive layout for new year view */
-        @media (max-width: 768px) {
-            .year-grid-new {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* Editing a single occurrence of a recurring task */
-        .scope-switch {
-            display: flex;
-        }
-
-        .scope-switch label {
-            flex: 1;
-        }
-
-        .scope-switch span {
-            flex: 1;
-            padding: 8px 10px;
-            font-weight: normal;
-        }
-
-        #taskForm.day-scope .series-only {
-            display: none !important;
-        }
-
-        .occurrence-modified {
-            font-size: 12px;
-            font-weight: normal;
-            color: #9b59b6;
-            margin-left: 6px;
-        }
-
-        .occurrence-reset {
-            background: none;
-            border: none;
-            color: #9b59b6;
-            cursor: pointer;
-            font-size: 14px;
-            padding: 0 4px;
-        }
-
-        .task-item.skipped {
-            display: flex;
-            align-items: center;
-            opacity: 0.6;
-            padding: 6px 10px;
-        }
-
-        .task-item.skipped .task-title {
-            text-decoration: line-through;
-            margin: 0;
-        }
-
-        .btn-danger {
-            background: #e74c3c;
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background: #c0392b;
-        }
-
-        #deleteModal .form-actions {
-            flex-wrap: wrap;
-        }
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: #f5f5f5;
+  color: #333;
+  transition:
+    background-color 0.3s,
+    color 0.3s;
+}
+
+html.dark-mode body {
+  background-color: #1a1a1a;
+  color: #f1f1f1;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.header-container {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  /* background-color: #2c3e50; */
+  /* margin-bottom: 20px; */
+}
+
+.header {
+  background-color: #2c3e50;
+  color: white;
+  padding: 20px;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header h1 {
+  flex-grow: 1;
+  text-align: center;
+  margin: 0;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+#notifyButton-modal {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+#notifyButton-modal:hover {
+  background-color: #2980b9;
+}
+
+#installPwaButton {
+  background-color: #27ae60;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+#installPwaButton:hover {
+  background-color: #219a52;
+}
+
+html.dark-mode .header {
+  background-color: #2c3e50;
+}
+
+.main-content {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 20px;
+}
+
+.main-content.year-view {
+  grid-template-columns: 1fr;
+}
+
+.main-content.year-view .day-panel {
+  display: none;
+}
+
+.main-content.year-view .calendar thead {
+  display: none;
+}
+
+.calendar-section {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+html.dark-mode .calendar-section {
+  background: #2a2a2a;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.month-selector {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.month-selector button {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.month-selector button:hover {
+  background: #2980b9;
+}
+
+.calendar {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.calendar th {
+  background: #34495e;
+  color: white;
+  padding: 10px;
+  text-align: center;
+}
+
+html.dark-mode .calendar th {
+  background: #3c4043;
+}
+
+.calendar td {
+  border: 1px solid #ecf0f1;
+  padding: 5px;
+  height: 100px;
+  vertical-align: top;
+  position: relative;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+html.dark-mode .calendar td {
+  border-color: #444;
+}
+
+.calendar td:hover {
+  background: #f8f9fa;
+}
+
+html.dark-mode .calendar td:hover {
+  background: #333;
+}
+
+.calendar td.other-month {
+  color: #bdc3c7;
+  background: #f8f9fa;
+}
+
+html.dark-mode .calendar td.other-month {
+  color: #666;
+  background: #222;
+}
+
+.calendar td.selected {
+  box-shadow: inset 0 0 0 2px #3498db;
+}
+
+html.dark-mode .calendar td.selected {
+  box-shadow: inset 0 0 0 2px #3498db;
+}
+
+.day-number {
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.free-hours {
+  font-size: 12px;
+  font-weight: bold;
+  color: #27ae60; /* Green */
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+}
+
+.calendar td.low-availability {
+  background-color: #ffebee; /* Light Red */
+}
+
+.calendar td.medium-availability {
+  background-color: #fffde7; /* Light Yellow */
+}
+
+html.dark-mode .calendar td.low-availability {
+  background-color: #4a1e1e;
+}
+
+html.dark-mode .calendar td.medium-availability {
+  background-color: #4d4d1f;
+}
+
+.calendar-task {
+  background: #e3f2fd;
+  color: #2c3e50;
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-size: 12px;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+html.dark-mode .calendar-task {
+  background: #004a7f;
+  color: #f1f1f1;
+}
+
+.day-panel {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  height: fit-content;
+}
+
+html.dark-mode .day-panel {
+  background: #2a2a2a;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.day-panel h3 {
+  margin-bottom: 15px;
+  color: #2c3e50;
+}
+
+html.dark-mode .day-panel h3 {
+  color: #f1f1f1;
+}
+
+.add-task-btn {
+  background: #27ae60;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  width: 100%;
+  margin-bottom: 15px;
+}
+
+.add-task-btn:hover {
+  background: #219a52;
+}
+
+.task-list {
+  list-style: none;
+}
+
+.task-item {
+  background: #f8f9fa;
+  padding: 10px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+  border-left: 4px solid #3498db;
+  position: relative;
+}
+
+html.dark-mode .task-item {
+  background: #333;
+  border-left-color: #3498db;
+}
+
+.task-item.recurring {
+  border-left-color: #9b59b6;
+}
+
+html.dark-mode .task-item.recurring {
+  border-left-color: #9b59b6;
+}
+
+.task-progress-text {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 14px;
+  font-weight: bold;
+  color: #27ae60;
+}
+
+.task-time {
+  font-weight: bold;
+  color: #2c3e50;
+}
+
+html.dark-mode .task-time {
+  color: #f1f1f1;
+}
+
+.task-title {
+  margin: 4px 0;
+}
+
+.task-actions {
+  margin-top: 8px;
+}
+
+.task-actions button {
+  background: none;
+  border: 1px solid #bdc3c7;
+  padding: 4px 8px;
+  margin-right: 5px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+html.dark-mode .task-actions button {
+  color: #f1f1f1;
+  border-color: #666;
+}
+
+.task-actions button:hover {
+  background: #ecf0f1;
+}
+
+html.dark-mode .task-actions button:hover {
+  background: #444;
+}
+
+.task-actions button.delete {
+  color: #e74c3c;
+  border-color: #e74c3c;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 30px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+}
+
+html.dark-mode .modal-content {
+  background: #2a2a2a;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: flex;
+  align-items: center;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+html.dark-mode .form-group input,
+html.dark-mode .form-group select,
+html.dark-mode .form-group textarea {
+  background: #333;
+  color: #f1f1f1;
+  border-color: #555;
+}
+
+.form-group input[type='checkbox'] {
+  width: auto;
+  margin-right: 10px;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.form-actions button {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: #3498db;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #2980b9;
+}
+
+.btn-secondary {
+  background: #95a5a6;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: #7f8c8d;
+}
+
+.recurring-options {
+  display: none;
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 4px;
+  margin-top: 10px;
+}
+
+.date-range-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+html.dark-mode .recurring-options {
+  background: #333;
+}
+
+.weekdays-selector {
+  display: flex;
+  gap: 5px;
+  margin-top: 10px;
+}
+
+.weekdays-selector label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 5px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+html.dark-mode .weekdays-selector label {
+  border-color: #555;
+}
+
+.monthly-options-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 15px;
+  align-items: end;
+}
+
+.checkbox-group {
+  margin-bottom: 10px; /* Align checkbox with the input field */
+}
+
+.weekdays-selector input[type='checkbox'] {
+  margin-top: 5px;
+}
+
+#modalTitle {
+  padding-bottom: 10px;
+}
+
+.time-gap {
+  background: #e0f7fa;
+  padding: 10px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+  border-left: 4px solid #00bcd4;
+  text-align: center;
+  color: #00838f;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+html.dark-mode .time-gap {
+  background: #00343d;
+  color: #7ddde8;
+  border-left-color: #00bcd4;
+}
+
+.gap-info {
+  font-size: 14px;
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    grid-template-columns: 1fr;
+  }
+}
+
+.task-item.completed {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+/* Theme switcher */
+.theme-switcher {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+}
+
+.theme-switcher input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.4s;
+  border-radius: 34px;
+}
+
+.slider:before {
+  position: absolute;
+  content: '';
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: 0.4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #2196f3;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #2196f3;
+}
+
+input:checked + .slider:before {
+  transform: translateX(26px);
+}
+
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+
+.settings-button,
+.view-mode-button,
+.info-button {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 24px;
+  padding: 0 10px;
+  line-height: 1;
+}
+
+.view-mode-button:hover,
+.settings-button:hover,
+.info-button:hover {
+  opacity: 0.8;
+}
+
+.radio-group {
+  display: inline-flex;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.radio-group label {
+  margin-bottom: 0;
+}
+
+.radio-group input[type='radio'] {
+  display: none;
+}
+
+.radio-group span {
+  display: block;
+  padding: 10px 15px;
+  text-align: center;
+  cursor: pointer;
+  background: #f8f9fa;
+  user-select: none;
+  border-left: 1px solid #ddd;
+}
+
+.radio-group label:first-child span {
+  border-left: none;
+}
+
+.radio-group input[type='radio']:checked + span {
+  background: #3498db;
+  color: white;
+}
+
+html.dark-mode .radio-group {
+  border-color: #555;
+}
+
+html.dark-mode .radio-group span {
+  background: #333;
+  border-left-color: #555;
+}
+
+html.dark-mode .radio-group input[type='radio']:checked + span {
+  background: #007bff;
+}
+
+.btn-group {
+  display: flex;
+}
+
+.btn-group button {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ddd;
+  background: #f8f9fa;
+  cursor: pointer;
+}
+
+.btn-group button:first-child {
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
+}
+
+.btn-group button:last-child {
+  border-top-right-radius: 4px;
+  border-bottom-right-radius: 4px;
+  border-left: none;
+}
+
+html.dark-mode .btn-group button {
+  background: #333;
+  border-color: #555;
+  color: #f1f1f1;
+}
+
+/* Year view calendar */
+.main-content.year-view .calendar td {
+  padding: 4px;
+  height: 40px;
+  font-size: 11px;
+}
+
+.main-content.year-view .day-number {
+  font-size: 10px;
+}
+
+.main-content.year-view .free-hours {
+  font-size: 8px;
+  bottom: 1px;
+  right: 1px;
+}
+
+.month-label {
+  font-weight: bold;
+  background: #34495e !important;
+  color: white !important;
+  text-align: center;
+  vertical-align: middle;
+  min-width: 80px;
+  cursor: default !important;
+}
+
+html.dark-mode .month-label {
+  background: #3c4043 !important;
+}
+
+.main-content.year-view .month-label {
+  font-size: 11px;
+  padding: 4px;
+}
+
+/* Year grid layout */
+.year-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  padding: 10px;
+  width: 100%;
+}
+
+.month-container {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.month-side-label {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  font-weight: bold;
+  background: #34495e;
+  color: white;
+  padding: 8px 4px;
+  border-radius: 4px;
+  font-size: 12px;
+  text-align: center;
+  min-height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+html.dark-mode .month-side-label {
+  background: #3c4043;
+}
+
+.month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  flex: 1;
+}
+
+.month-day {
+  aspect-ratio: 1;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 4px;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  font-size: 10px;
+  transition: all 0.2s;
+}
+
+.month-day:hover {
+  background: #e8f4f8;
+  transform: scale(1.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.month-day.empty {
+  border: none;
+  background: transparent;
+  cursor: default;
+}
+
+.month-day.today {
+  background: #3498db;
+  color: white;
+  font-weight: bold;
+}
+
+.month-day.today:hover {
+  background: #2980b9;
+}
+
+.month-day .day-number {
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.month-day .free-hours {
+  font-size: 7px;
+  margin-top: 2px;
+  opacity: 0.8;
+}
+
+.month-day.low-availability {
+  background: #ffebee;
+}
+
+.month-day.medium-availability {
+  background: #fff3e0;
+}
+
+html.dark-mode .month-day {
+  background: #2c2c2c;
+  border-color: #444;
+  color: #f1f1f1;
+}
+
+html.dark-mode .month-day:hover {
+  background: #3a3a3a;
+}
+
+html.dark-mode .month-day.today {
+  background: #2980b9;
+}
+
+html.dark-mode .month-day.low-availability {
+  background: #4a2c2c;
+}
+
+html.dark-mode .month-day.medium-availability {
+  background: #4a3c2c;
+}
+
+/* Responsive layout for year view */
+@media (max-width: 1200px) {
+  .year-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .year-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Info modal */
+.info-modal-content {
+  max-width: 600px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.info-content {
+  text-align: left;
+  line-height: 1.6;
+}
+
+.info-content h3 {
+  color: #2c3e50;
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+
+html.dark-mode .info-content h3 {
+  color: #f1f1f1;
+}
+
+.info-content ul {
+  margin-left: 20px;
+  margin-bottom: 15px;
+}
+
+.info-content li {
+  margin-bottom: 8px;
+}
+
+.info-content ul ul {
+  margin-top: 5px;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+  border: 2px solid #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+html.dark-mode ::-webkit-scrollbar-track {
+  background: #2a2a2a;
+}
+
+html.dark-mode ::-webkit-scrollbar-thumb {
+  background: #555;
+  border-color: #2a2a2a;
+}
+
+html.dark-mode ::-webkit-scrollbar-thumb:hover {
+  background: #777;
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #888 #f1f1f1;
+}
+
+html.dark-mode * {
+  scrollbar-color: #555 #2a2a2a;
+}
+
+/* New Year View (2x6 grid) */
+.year-grid-new {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  padding: 20px;
+  width: 100%;
+}
+
+.month-block {
+  background: white;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s;
+}
+
+.month-block:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.month-block.current-month {
+  border-color: #3498db;
+  background: #f0f8ff;
+}
+
+html.dark-mode .month-block {
+  background: #2a2a2a;
+  border-color: #444;
+}
+
+html.dark-mode .month-block.current-month {
+  border-color: #3498db;
+  background: #1a3a4a;
+}
+
+.month-block-header {
+  font-size: 16px;
+  font-weight: bold;
+  color: #2c3e50;
+  text-align: center;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #ecf0f1;
+}
+
+html.dark-mode .month-block-header {
+  color: #f1f1f1;
+  border-bottom-color: #444;
+}
+
+.month-note {
+  flex: 1;
+  min-height: 80px;
+  resize: vertical;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 8px;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.month-note:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+html.dark-mode .month-note {
+  background: #1a1a1a;
+  border-color: #555;
+  color: #f1f1f1;
+}
+
+.month-details-btn {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.month-details-btn:hover {
+  background: #2980b9;
+}
+
+/* Responsive layout for new year view */
+@media (max-width: 768px) {
+  .year-grid-new {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Editing a single occurrence of a recurring task */
+.scope-switch {
+  display: flex;
+}
+
+.scope-switch label {
+  flex: 1;
+}
+
+.scope-switch span {
+  flex: 1;
+  padding: 8px 10px;
+  font-weight: normal;
+}
+
+#taskForm.day-scope .series-only {
+  display: none !important;
+}
+
+.occurrence-modified {
+  font-size: 12px;
+  font-weight: normal;
+  color: #9b59b6;
+  margin-left: 6px;
+}
+
+.occurrence-reset {
+  background: none;
+  border: none;
+  color: #9b59b6;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0 4px;
+}
+
+.task-item.skipped {
+  display: flex;
+  align-items: center;
+  opacity: 0.6;
+  padding: 6px 10px;
+}
+
+.task-item.skipped .task-title {
+  text-decoration: line-through;
+  margin: 0;
+}
+
+.btn-danger {
+  background: #e74c3c;
+  color: white;
+}
+
+.btn-danger:hover {
+  background: #c0392b;
+}
+
+#deleteModal .form-actions {
+  flex-wrap: wrap;
+}

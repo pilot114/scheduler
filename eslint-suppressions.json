@@ -1,0 +1,17 @@
+{
+  "tests/calendar.spec.js": {
+    "no-unused-vars": {
+      "count": 2
+    }
+  },
+  "tests/integration.spec.js": {
+    "no-unused-vars": {
+      "count": 3
+    }
+  },
+  "tests/occurrences.spec.js": {
+    "no-undef": {
+      "count": 4
+    }
+  }
+}

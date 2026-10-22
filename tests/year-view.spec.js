@@ -139,7 +139,7 @@ test.describe('Планировщик - Режим просмотра года',
 
     // Проверяем текст кнопки
     const buttonTexts = await detailsButtons.allTextContents();
-    buttonTexts.forEach(text => {
+    buttonTexts.forEach((text) => {
       expect(text).toBe('Подробнее');
     });
   });

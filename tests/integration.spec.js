@@ -3,7 +3,7 @@ const { test, expect } = require('@playwright/test');
 test.describe('Планировщик - Интеграционные тесты', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/index.html');
-    
+
     // Очищаем localStorage
     await page.evaluate(() => {
       localStorage.clear();
@@ -17,42 +17,42 @@ test.describe('Планировщик - Интеграционные тесты'
     const day = page.locator('.calendar tbody td:not(.other-month)').first();
     await day.click();
     await expect(day).toHaveClass(/selected/);
-    
+
     // Кликаем на свободный временной слот
     const timeGap = page.locator('.time-gap').first();
-    if (await timeGap.count() > 0) {
+    if ((await timeGap.count()) > 0) {
       await timeGap.click();
-      
+
       // Создаем задачу
       await expect(page.locator('#taskModal')).toBeVisible();
       await page.fill('#taskTitle', 'Интеграционная задача');
       await page.fill('#taskDescription', 'Тестирование полного цикла');
       await page.click('button[type="submit"]');
-      
+
       // Проверяем, что задача появилась
       await expect(page.locator('.task-item')).toHaveCount(1);
       await expect(page.locator('.task-title')).toHaveText('Интеграционная задача');
-      
+
       // Редактируем задачу
       await page.click('button:has-text("Редактировать")');
       await expect(page.locator('#taskModal')).toBeVisible();
       await page.fill('#taskTitle', 'Измененная задача');
       await page.click('button[type="submit"]');
-      
+
       // Проверяем изменения
       await expect(page.locator('.task-title')).toHaveText('Измененная задача');
-      
+
       // Завершаем задачу
-      if (await page.locator('button:has-text("Завершить")').count() > 0) {
+      if ((await page.locator('button:has-text("Завершить")').count()) > 0) {
         await page.click('button:has-text("Завершить")');
         await expect(page.locator('.task-item')).toHaveClass(/completed/);
       }
-      
+
       // Удаляем задачу
-      page.on('dialog', async dialog => {
+      page.on('dialog', async (dialog) => {
         await dialog.accept();
       });
-      
+
       await page.click('button:has-text("Удалить")');
       await expect(page.locator('.task-item')).toHaveCount(0);
     }
@@ -69,25 +69,25 @@ test.describe('Планировщик - Интеграционные тесты'
       radio.dispatchEvent(new Event('click', { bubbles: true }));
     });
     await page.click('#settingsModal', { position: { x: 10, y: 10 } });
-    
+
     // Выбираем день и создаем задачу
     const day = page.locator('.calendar tbody td:not(.other-month)').first();
     await day.click();
-    
+
     // Программно открываем модальное окно создания задачи
     await page.evaluate(() => {
       window.showAddTaskModal();
     });
-    
+
     // Проверяем, что шаг времени изменился в элементах управления
     const timeStep = await page.locator('#taskTime').getAttribute('step');
     expect(timeStep).toBe('30');
-    
+
     const durationStep = await page.locator('#taskDuration').getAttribute('step');
     expect(durationStep).toBe('30');
-    
+
     await page.click('#taskModal button:has-text("Отмена")');
-    
+
     // Включаем темную тему
     await page.click('#settings-btn');
     await page.evaluate(() => {
@@ -96,7 +96,7 @@ test.describe('Планировщик - Интеграционные тесты'
       checkbox.dispatchEvent(new Event('change', { bubbles: true }));
       checkbox.dispatchEvent(new Event('click', { bubbles: true }));
     });
-    
+
     // Проверяем, что тема применилась
     const hasDarkMode = await page.evaluate(() => {
       return document.documentElement.classList.contains('dark-mode');
@@ -108,7 +108,7 @@ test.describe('Планировщик - Интеграционные тесты'
     const today = new Date();
     const currentMonth = today.getMonth();
     const currentYear = today.getFullYear();
-    
+
     // Создаем задачу на текущую дату
     const todayStr = today.toISOString().split('T')[0];
     await page.evaluate((dateStr) => {
@@ -118,47 +118,47 @@ test.describe('Планировщик - Интеграционные тесты'
         title: 'Задача текущего месяца',
         time: '10:00',
         duration: '60',
-        date: dateStr
+        date: dateStr,
       };
       localStorage.setItem('tasks', JSON.stringify([task]));
       window.loadTasks();
     }, todayStr);
-    
+
     // Выбираем текущий день
     await page.evaluate((dateStr) => {
       window.selectDate(dateStr);
     }, todayStr);
-    
+
     // Ждем появления задачи с таймаутом
     await page.waitForSelector('.task-item', { timeout: 5000 });
-    
+
     // Проверяем, что задача отображается
     await expect(page.locator('.task-item')).toHaveCount(1);
-    
+
     // Переходим к следующему месяцу
     await page.click('button:has-text("►")');
-    
+
     // Очищаем выбранную дату и список задач
     await page.evaluate(() => {
       window.selectedDate = null;
       document.getElementById('taskList').innerHTML = '';
       // Убираем выделение с дат
-      document.querySelectorAll('.calendar td').forEach(td => {
+      document.querySelectorAll('.calendar td').forEach((td) => {
         td.classList.remove('selected');
       });
     });
-    
+
     // Проверяем, что задачи не отображаются в другом месяце
     await expect(page.locator('.task-item')).toHaveCount(0);
-    
+
     // Возвращаемся к текущему месяцу
     await page.click('button:has-text("◄")');
-    
+
     // Выбираем тот же день снова
     await page.evaluate((dateStr) => {
       window.selectDate(dateStr);
     }, todayStr);
-    
+
     // Проверяем, что задача снова отображается
     await expect(page.locator('.task-item')).toHaveCount(1);
   });
@@ -166,45 +166,48 @@ test.describe('Планировщик - Интеграционные тесты'
   test('Создание и отображение повторяющихся задач', async ({ page }) => {
     const today = new Date();
     const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, today.getDate());
-    
+
     // Создаем ежедневную повторяющуюся задачу
     const todayStr = today.toISOString().split('T')[0];
-    await page.evaluate(({ startDate, endDate }) => {
-      const task = {
-        id: '1',
-        type: 'recurring',
-        title: 'Ежедневная задача',
-        time: '09:00',
-        duration: '30',
-        recurringType: 'daily',
-        startDate: startDate,
-        endDate: endDate
-      };
-      localStorage.setItem('tasks', JSON.stringify([task]));
-      window.loadTasks();
-    }, { startDate: todayStr, endDate: nextMonth.toISOString().split('T')[0] });
-    
+    await page.evaluate(
+      ({ startDate, endDate }) => {
+        const task = {
+          id: '1',
+          type: 'recurring',
+          title: 'Ежедневная задача',
+          time: '09:00',
+          duration: '30',
+          recurringType: 'daily',
+          startDate: startDate,
+          endDate: endDate,
+        };
+        localStorage.setItem('tasks', JSON.stringify([task]));
+        window.loadTasks();
+      },
+      { startDate: todayStr, endDate: nextMonth.toISOString().split('T')[0] },
+    );
+
     // Выбираем текущий день
     await page.evaluate((dateStr) => {
       window.selectDate(dateStr);
     }, todayStr);
-    
+
     // Ждем появления задач
     await page.waitForSelector('.task-item', { timeout: 5000 });
-    
+
     // Проверяем, что повторяющаяся задача отображается
     await expect(page.locator('.task-item.recurring')).toHaveCount(1);
     await expect(page.locator('.task-title')).toHaveText('Ежедневная задача');
-    
+
     // Переходим к следующему дню
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
     const tomorrowStr = tomorrow.toISOString().split('T')[0];
-    
+
     await page.evaluate((dateStr) => {
       window.selectDate(dateStr);
     }, tomorrowStr);
-    
+
     // Проверяем, что задача отображается и завтра
     await expect(page.locator('.task-item.recurring')).toHaveCount(1);
   });
@@ -219,7 +222,7 @@ test.describe('Планировщик - Интеграционные тесты'
           title: 'Обычная задача',
           time: '10:00',
           duration: '60',
-          date: new Date().toISOString().split('T')[0]
+          date: new Date().toISOString().split('T')[0],
         },
         {
           id: '2',
@@ -230,18 +233,18 @@ test.describe('Планировщик - Интеграционные тесты'
           recurringType: 'weekly',
           weekdays: ['1', '3', '5'], // Пн, Ср, Пт
           startDate: new Date().toISOString().split('T')[0],
-          endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-        }
+          endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        },
       ];
       const settings = {
         step: 15,
         theme: 'dark-mode',
-        notifications: false
+        notifications: false,
       };
-      
+
       localStorage.setItem('tasks', JSON.stringify(tasks));
       localStorage.setItem('settings', JSON.stringify(settings));
-      
+
       // Перезагружаем данные
       if (window.loadTasks) {
         window.loadTasks();
@@ -253,51 +256,51 @@ test.describe('Планировщик - Интеграционные тесты'
         window.updateCalendar();
       }
     });
-    
+
     // Обновляем страницу для применения загруженных данных
     await page.reload();
     await page.waitForSelector('.calendar');
-    
+
     // Проверяем, что данные отображаются
     const todayStr = new Date().toISOString().split('T')[0];
     const todayCell = page.locator(`[data-date="${todayStr}"]`);
-    
-    if (await todayCell.count() > 0) {
+
+    if ((await todayCell.count()) > 0) {
       await todayCell.click();
       // Ждем появления задач
       await page.waitForSelector('.task-item', { timeout: 5000 });
       const taskCount = await page.locator('.task-item').count();
       expect(taskCount).toBeGreaterThan(0);
     }
-    
+
     // Экспортируем данные
     await page.click('#settings-btn');
     const downloadPromise = page.waitForEvent('download');
     await page.click('#export-btn');
     const download = await downloadPromise;
-    
+
     // Очищаем данные
     await page.evaluate(() => {
       localStorage.clear();
     });
     await page.reload();
     await page.waitForSelector('.calendar');
-    
+
     // Проверяем, что данные очистились
-    if (await todayCell.count() > 0) {
+    if ((await todayCell.count()) > 0) {
       await todayCell.click();
       await expect(page.locator('.task-item')).toHaveCount(0);
     }
-    
+
     // Имитируем импорт данных
     await page.click('#settings-btn');
-    
-    page.on('dialog', async dialog => {
+
+    page.on('dialog', async (dialog) => {
       if (dialog.message().includes('успешно импортированы')) {
         await dialog.accept();
       }
     });
-    
+
     // Программно создаем событие импорта с теми же данными
     await page.evaluate(() => {
       const testData = {
@@ -308,40 +311,40 @@ test.describe('Планировщик - Интеграционные тесты'
             title: 'Обычная задача',
             time: '10:00',
             duration: '60',
-            date: new Date().toISOString().split('T')[0]
-          }
+            date: new Date().toISOString().split('T')[0],
+          },
         ],
         settings: {
           step: 15,
           theme: 'dark-mode',
-          notifications: false
-        }
+          notifications: false,
+        },
       };
-      
+
       const blob = new Blob([JSON.stringify(testData)], { type: 'application/json' });
       const file = new File([blob], 'test-import.json', { type: 'application/json' });
-      
+
       const input = document.getElementById('import-file');
       const dataTransfer = new DataTransfer();
       dataTransfer.items.add(file);
       input.files = dataTransfer.files;
-      
+
       const event = new Event('change', { bubbles: true });
       input.dispatchEvent(event);
     });
-    
+
     await page.waitForTimeout(200);
-    
+
     // Закрываем модальное окно настроек
     await page.click('#settingsModal', { position: { x: 10, y: 10 } });
-    
+
     // Проверяем, что данные восстановились
-    if (await todayCell.count() > 0) {
+    if ((await todayCell.count()) > 0) {
       await todayCell.click();
       await expect(page.locator('.task-item')).toHaveCount(1);
       await expect(page.locator('.task-title')).toHaveText('Обычная задача');
     }
-    
+
     // Проверяем, что настройки тоже восстановились
     const hasDarkMode = await page.evaluate(() => {
       return document.documentElement.classList.contains('dark-mode');
@@ -353,7 +356,7 @@ test.describe('Планировщик - Интеграционные тесты'
     // Выбираем день
     const day = page.locator('.calendar tbody td:not(.other-month)').first();
     await day.click();
-    
+
     // Создаем задачу программно в середине дня
     const today = new Date().toISOString().split('T')[0];
     await page.evaluate((dateStr) => {
@@ -363,39 +366,39 @@ test.describe('Планировщик - Интеграционные тесты'
         title: 'Задача в середине дня',
         time: '12:00',
         duration: '120', // 2 часа
-        date: dateStr
+        date: dateStr,
       };
       localStorage.setItem('tasks', JSON.stringify([task]));
       window.loadTasks();
       window.selectDate(dateStr);
     }, today);
-    
+
     // Проверяем, что есть временные слоты до и после задачи
     await expect(page.locator('.time-gap')).toHaveCount(2);
-    
+
     // Добавляем еще одну задачу через интерфейс
     const firstGap = page.locator('.time-gap').first();
     await firstGap.click();
-    
+
     await expect(page.locator('#taskModal')).toBeVisible();
     await page.fill('#taskTitle', 'Утренняя задача');
     await page.click('button[type="submit"]');
-    
+
     // Проверяем, что количество задач увеличилось
     await expect(page.locator('.task-item')).toHaveCount(2);
-    
+
     // Проверяем, что свободное время пересчиталось
     const gaps = page.locator('.time-gap');
     const gapCount = await gaps.count();
     expect(gapCount).toBeGreaterThanOrEqual(1);
-    
+
     // Удаляем одну задачу
-    page.on('dialog', async dialog => {
+    page.on('dialog', async (dialog) => {
       await dialog.accept();
     });
-    
+
     await page.locator('button:has-text("Удалить")').first().click();
-    
+
     // Проверяем, что свободное время увеличилось
     await expect(page.locator('.task-item')).toHaveCount(1);
     const newGapCount = await page.locator('.time-gap').count();
@@ -406,63 +409,66 @@ test.describe('Планировщик - Интеграционные тесты'
     const today = new Date();
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
-    
+
     // Создаем задачи на два дня
     const todayStr = today.toISOString().split('T')[0];
     const tomorrowStr = tomorrow.toISOString().split('T')[0];
-    
-    await page.evaluate(({ todayStr, tomorrowStr }) => {
-      const tasks = [
-        {
-          id: '1',
-          type: 'single',
-          title: 'Задача на сегодня',
-          time: '10:00',
-          duration: '60',
-          date: todayStr
-        },
-        {
-          id: '2',
-          type: 'single',
-          title: 'Задача на завтра',
-          time: '14:00',
-          duration: '90',
-          date: tomorrowStr
-        }
-      ];
-      localStorage.setItem('tasks', JSON.stringify(tasks));
-      window.loadTasks();
-    }, { todayStr, tomorrowStr });
-    
+
+    await page.evaluate(
+      ({ todayStr, tomorrowStr }) => {
+        const tasks = [
+          {
+            id: '1',
+            type: 'single',
+            title: 'Задача на сегодня',
+            time: '10:00',
+            duration: '60',
+            date: todayStr,
+          },
+          {
+            id: '2',
+            type: 'single',
+            title: 'Задача на завтра',
+            time: '14:00',
+            duration: '90',
+            date: tomorrowStr,
+          },
+        ];
+        localStorage.setItem('tasks', JSON.stringify(tasks));
+        window.loadTasks();
+      },
+      { todayStr, tomorrowStr },
+    );
+
     // Выбираем сегодня
     await page.evaluate((dateStr) => {
       window.selectDate(dateStr);
     }, todayStr);
-    
+
     // Ждем появления задач
     await page.waitForSelector('.task-item', { timeout: 5000 });
-    
+
     // Проверяем задачу на сегодня
     await expect(page.locator('.task-item')).toHaveCount(1);
     await expect(page.locator('.task-title')).toHaveText('Задача на сегодня');
-    
+
     // Переключаемся на завтра
     await page.evaluate((dateStr) => {
       window.selectDate(dateStr);
     }, tomorrowStr);
-    
+
     // Ждем появления задач на завтра
     await page.waitForSelector('.task-item', { timeout: 5000 });
-    
+
     // Проверяем задачу на завтра
     await expect(page.locator('.task-item')).toHaveCount(1);
     await expect(page.locator('.task-title')).toHaveText('Задача на завтра');
-    
+
     // Возвращаемся к сегодня
     await page.evaluate((dateStr) => {
       window.selectDate(dateStr);
     }, todayStr);
-    
+
     // Проверяем, что отображается задача на сегодня
     await expect(page.locator('.task-item')).toHaveCount(1);
     await expect(page.locator('.task-title')).toHaveText('Задача на сегодня');
